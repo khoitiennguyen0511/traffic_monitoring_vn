@@ -46,9 +46,10 @@ The system leverages a high-performance Edge AI pipeline (YOLOv11 object detecto
 
 ## Installation & Run Guide
 
-This distributed system is divided into two primary environments:
-1. **Central Server (Laptop / Windows PC):** Hosts the FastAPI OCR engine, Streamlit Dashboard, SQLite database, and compiles/flashes the ESP32 firmware.
-2. **Edge Node (Raspberry Pi 4):** Hosts the local Mosquitto MQTT Broker and runs the Edge AI pipeline.
+This distributed system is divided into three main setup phases:
+1. **Infrastructure Setup (Raspberry Pi 4):** Obtain IP and start Mosquitto MQTT Broker.
+2. **Central Server & Firmware Setup (Laptop / Windows PC):** Host FastAPI/Streamlit, and flash ESP32 firmware.
+3. **Edge AI Agent Setup (Raspberry Pi 4):** Compile NCNN and run the Edge AI pipeline.
 
 ### Step 0: Clone the Repository
 Clone the project repository to both your Laptop (Windows) and Raspberry Pi 4 (Edge Node):
@@ -57,10 +58,53 @@ git clone https://github.com/khoitiennguyen0511/traffic_monitoring_vn.git
 cd traffic_monitoring_vn
 ```
 
-### 1. Central Server Setup (Laptop - Windows)
+---
 
-#### Step 1.1: Environment Setup
-Open PowerShell in the cloned `traffic_monitoring_vn` directory:
+### 1. Infrastructure Setup (Raspberry Pi 4 - Edge Node)
+
+Before configuring any devices, set up the communication broker and retrieve the network IP.
+
+#### Step 1.1: Retrieve Pi Network IP Address
+Open the terminal on your Raspberry Pi 4 and run:
+```bash
+hostname -I
+```
+Identify the active local IP address of your Pi (e.g., `172.20.10.5`). This IP will be the central MQTT Broker host.
+
+#### Step 1.2: Configure Mosquitto MQTT Broker
+On the Raspberry Pi, install and configure Mosquitto:
+1. Install package and client tools:
+   ```bash
+   sudo apt update
+   sudo apt install -y mosquitto mosquitto-clients
+   ```
+2. Enable external connections (allowing ESP32 and Laptop to connect) by editing the configuration file:
+   ```bash
+   sudo nano /etc/mosquitto/mosquitto.conf
+   ```
+   Add the following listener configuration at the bottom:
+   ```conf
+   listener 1883
+   allow_anonymous true
+   ```
+3. Restart the service to apply settings:
+   ```bash
+   sudo systemctl restart mosquitto
+   ```
+
+---
+
+### 2. Central Server Setup (Laptop - Windows)
+
+#### Step 2.1: Retrieve Laptop Network IP Address
+On your Windows Laptop, open cmd or PowerShell and run:
+```cmd
+ipconfig
+```
+Identify the **IPv4 Address** of the active network adapter (e.g., `172.20.10.2`). This IP will be used by the Pi to post violation results.
+
+#### Step 2.2: Python Environment Setup
+Open PowerShell inside the root `traffic_monitoring_vn` directory on your Laptop:
 1. Create a Python virtual environment:
    ```powershell
    python -m venv .venv
@@ -76,14 +120,7 @@ Open PowerShell in the cloned `traffic_monitoring_vn` directory:
    pip install streamlit
    ```
 
-#### Step 1.2: Retrieve Network IP Address
-Run the following command in cmd/PowerShell:
-```cmd
-ipconfig
-```
-Identify the **IPv4 Address** of the active network adapter (e.g., `172.20.10.2`). This IP will be referenced by the Raspberry Pi and ESP32 to upload data.
-
-#### Step 1.3: Start FastAPI Server & Web Dashboard
+#### Step 2.3: Start FastAPI Server & Streamlit Dashboard
 Open **two separate terminals** on your Windows Laptop, activate `.venv` on both, and run:
 *   **Terminal 1 (FastAPI Backend Server):**
     ```powershell
@@ -99,18 +136,25 @@ Open **two separate terminals** on your Windows Laptop, activate `.venv` on both
     ```
     *Starts the management web interface at `http://localhost:8501`.*
 
-#### Step 1.4: Upload Firmware to ESP32
-1. Connect the ESP32 board to the laptop via a micro-USB cable.
-2. Edit [credentials.h](file:///d:/traffic_monitoring_vn/esp32/include/credentials.h) to match your Wi-Fi credentials:
+---
+
+### 3. ESP32 Traffic Light Controller Setup
+
+#### Step 3.1: Configure Firmware Settings
+On your Windows Laptop, navigate to `esp32/include/`:
+1. Edit [credentials.h](file:///d:/traffic_monitoring_vn/esp32/include/credentials.h) with your Wi-Fi credentials:
    ```cpp
    #define WIFI_SSID "Your_WiFi_SSID"
    #define WIFI_PASSWORD "Your_WiFi_Password"
    ```
-3. Edit [mqtt_config.h](file:///d:/traffic_monitoring_vn/esp32/include/mqtt_config.h) to configure the target MQTT Broker IP address (this should point to the IP of the Raspberry Pi, e.g., `172.20.10.5`):
+2. Edit [mqtt_config.h](file:///d:/traffic_monitoring_vn/esp32/include/mqtt_config.h) with the target MQTT Broker IP address (the IP of the Raspberry Pi retrieved in Step 1.1, e.g., `172.20.10.5`):
    ```cpp
    #define MQTT_BROKER_HOST "172.20.10.5"
    ```
-4. Build and upload using PlatformIO inside the `esp32` directory:
+
+#### Step 3.2: Flash the ESP32
+1. Connect the ESP32 board to the laptop via a micro-USB cable.
+2. Build and upload using PlatformIO inside the `esp32` directory:
    ```powershell
    cd esp32
    pio run -t upload
@@ -119,50 +163,31 @@ Open **two separate terminals** on your Windows Laptop, activate `.venv` on both
 
 ---
 
-### 2. Edge Agent Setup (Raspberry Pi 4)
+### 4. Edge Agent Setup (Raspberry Pi 4)
 
-#### Step 2.1: Configure Mosquitto MQTT Broker
-On the Raspberry Pi terminal, install and configure Mosquitto:
-1. Install package and client tools:
-   ```bash
-   sudo apt update
-   sudo apt install -y mosquitto mosquitto-clients
-   ```
-2. Enable external connections (allowing ESP32 to publish/subscribe) by editing the config:
-   ```bash
-   sudo nano /etc/mosquitto/mosquitto.conf
-   ```
-   Add the following listener configuration at the bottom:
-   ```conf
-   listener 1883
-   allow_anonymous true
-   ```
-3. Restart the service to apply settings:
-   ```bash
-   sudo systemctl restart mosquitto
-   ```
-   *Retrieve your Pi's local IP address using `hostname -I` (e.g., `172.20.10.5`).*
+#### Step 4.1: Install System Dependencies
+On the Raspberry Pi terminal, install essential compiler tools, OpenCV, OpenMP, and Vulkan packages:
+```bash
+sudo apt install -y build-essential cmake git libopencv-dev libomp-dev python3-pip python3-venv libvulkan-dev vulkan-tools protobuf-compiler libprotobuf-dev
+```
 
-#### Step 2.2: Setup Virtual Environment & Python Packages
-1. Install essential compiler tools, OpenCV, OpenMP, and Vulkan packages:
-   ```bash
-   sudo apt install -y build-essential cmake git libopencv-dev libomp-dev python3-pip python3-venv libvulkan-dev vulkan-tools protobuf-compiler libprotobuf-dev
-   ```
-2. Setup the virtual environment:
+#### Step 4.2: Setup Python Virtual Environment
+On the Raspberry Pi terminal, navigate to the project folder:
+1. Create and activate the virtual environment:
    ```bash
    cd ~/traffic_monitoring_vn
    python3 -m venv .venv
    source .venv/bin/activate
    pip install --upgrade pip
    ```
-3. **Storage Optimization Tip:**
+2. **Storage Optimization Tip:**
    The `ultralytics` package automatically installs massive PyTorch binaries (`torch` & `torchvision`), which take >1.5 GB of storage. 
    If you **only plan to run the NCNN optimized Edge Agent (`agent_ncnn.py`)**, open [edge_pi4/requirements.txt](file:///d:/traffic_monitoring_vn/edge_pi4/requirements.txt) and comment out `ultralytics==8.3.207` (add `#` at the beginning of the line). Then install requirements:
    ```bash
    pip install -r edge_pi4/requirements.txt
    ```
 
-#### Step 2.3: Compile NCNN from Repository
+#### Step 4.3: Compile NCNN from Repository
 To compile the high-performance Tencent NCNN library with Vulkan GPU and OpenMP CPU multi-threading support:
 ```bash
 cd ~
@@ -185,18 +210,18 @@ source ~/traffic_monitoring_vn/.venv/bin/activate
 pip install ncnn
 ```
 
-#### Step 2.4: Configure settings.yaml
+#### Step 4.4: Configure settings.yaml
 Edit `shared/configs/settings.yaml` on the Raspberry Pi to set up IP mappings:
 ```yaml
 mqtt:
-  broker: "172.20.10.5"   # Raspberry Pi IP
+  broker: "172.20.10.5"   # Raspberry Pi IP (retrieved in Step 1.1)
   port: 1883
 edge:
-  server_host: "172.20.10.2" # Laptop Windows IP
+  server_host: "172.20.10.2" # Laptop Windows IP (retrieved in Step 2.1)
   server_port: 8000
 ```
 
-#### Step 2.5: Run the Edge Agent
+#### Step 4.5: Run the Edge Agent
 With the virtual environment activated, run the agent:
 *   **GUI Mode (Displays Video Frame):**
     ```bash
@@ -213,30 +238,29 @@ With the virtual environment activated, run the agent:
 
 ---
 
-### 3. Verification, Benchmarking & Optimization (Optional)
+### 5. Verification, Benchmarking & Optimization (Optional)
 
-#### Step 3.1: Environment Verification
+#### Step 5.1: Environment Verification
 Verify that your Python packages, libraries (OpenCV NEON/OpenMP build flags), hardware settings (CPU frequency governor), and model weights are ready:
 ```bash
 python3 scripts/check_env_pi.py
 ```
 
-#### Step 3.2: Model Performance Benchmarking
+#### Step 5.2: Model Performance Benchmarking
 Compare model load times, inference latencies, and theoretical FPS between PyTorch (`.pt`) and NCNN (Original vs Optimized) at 320x320 and 480x480 resolution:
 ```bash
 python3 scripts/compare_models.py
 ```
 *The benchmark report will be written to `shared/configs/model_comparison_results.md`.*
 
-#### Step 3.3: Automated Validation & Telemetry Suite
+#### Step 5.3: Automated Validation & Telemetry Suite
 Run the automated stress-test script to profile system resource usage (CPU temperature, CPU load, RAM usage) under load:
 ```bash
 bash scripts/run_automated_tests.sh
 ```
 
-#### Step 3.4: Model Optimization (FP16)
-If you want to optimize your own custom-trained YOLO model to FP16 (pre-optimized FP16 model weights are already provided in the repository under `shared/models/`):
-
+#### Step 5.4: Model Optimization (FP16)
+If you want to optimize your own custom-trained YOLO model to FP16:
 ```bash
 cd ~/ncnn/build/tools
 ./ncnnoptimize \
