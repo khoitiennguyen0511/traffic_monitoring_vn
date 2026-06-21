@@ -1,16 +1,31 @@
 # PHỤ LỤC: HƯỚNG DẪN CÀI ĐẶT VÀ VẬN HÀNH HỆ THỐNG
-*(Đính kèm Báo cáo Đồ án Tốt nghiệp)*
+*(Tài liệu đính kèm Báo cáo Đồ án Tốt nghiệp)*
 
 ---
 
 Tài liệu này cung cấp hướng dẫn kỹ thuật chi tiết nhằm thiết lập môi trường, cấu hình truyền thông và khởi chạy toàn bộ hệ thống giám sát giao thông thông minh từ đầu cuối (End-to-End). Hướng dẫn được phân chia rõ ràng giữa các tác vụ thực hiện trên máy tính cá nhân (Central Server) và máy tính nhúng tại biên (Raspberry Pi 4 - Edge Agent).
 
+> [!IMPORTANT]
+> **YÊU CẦU MẠNG NỘI BỘ (WI-FI LAN):** 
+> Toàn bộ các thiết bị bao gồm: **Máy tính trung tâm (Laptop Windows)**, **Thiết bị biên (Raspberry Pi 4)** và **Bộ điều khiển ESP32** bắt buộc phải kết nối chung vào một điểm phát Wi-Fi (Mạng cục bộ - LAN). Nếu kết nối khác mạng, các thiết bị sẽ không thể truyền nhận gói tin MQTT và dữ liệu ảnh HTTP POST cho nhau. Bạn có thể sử dụng tính năng điểm phát sóng cá nhân (Hotspot) trên điện thoại di động để đảm bảo độ ổn định và định tuyến thông suốt.
+
 ---
 
 ## THỰC HIỆN TẢI MÃ NGUỒN (GIT CLONE)
 
-Trước khi tiến hành cài đặt các thành phần, thực hiện tải mã nguồn dự án về cả Máy tính trung tâm (Laptop) và Thiết bị biên (Raspberry Pi 4):
+Trước khi tiến hành cài đặt các thành phần trên bất kỳ thiết bị nào, bạn cần nhân bản (clone) mã nguồn dự án:
+
+### 1. Trên Máy tính trung tâm (Laptop Windows):
+Mở Git Bash hoặc cửa sổ Command Prompt/PowerShell tại thư mục bạn muốn lưu dự án (ví dụ: ổ `D:\`) và thực thi:
 ```bash
+git clone https://github.com/khoitiennguyen0511/traffic_monitoring_vn.git
+cd traffic_monitoring_vn
+```
+
+### 2. Trên Thiết bị biên (Raspberry Pi 4):
+Mở terminal của Raspberry Pi 4 (hoặc qua kết nối SSH) và chạy lệnh tại thư mục người dùng (`home`):
+```bash
+cd ~
 git clone https://github.com/khoitiennguyen0511/traffic_monitoring_vn.git
 cd traffic_monitoring_vn
 ```
@@ -19,57 +34,72 @@ cd traffic_monitoring_vn
 
 ## A. KHỞI TẠO HẠ TẦNG MẠNG & MQTT BROKER TRÊN RASPBERRY PI 4
 
-Trước khi cấu hình các thiết bị khác, cần thiết lập kênh truyền thông chung và xác định các địa chỉ IP trong mạng nội bộ.
+Để cấu hình kết nối cho ESP32 và Server, ta cần thiết lập MQTT Broker đóng vai trò máy chủ trung gian truyền tin trước và lấy thông tin địa chỉ IP của Raspberry Pi.
 
 ### A.1. Xác định địa chỉ IP của Raspberry Pi
 Mở Terminal trên Raspberry Pi 4 và chạy lệnh:
 ```bash
 hostname -I
 ```
-Ghi lại địa chỉ IP hiển thị (ví dụ: `172.20.10.5`). Địa chỉ này sẽ được dùng làm địa chỉ MQTT Broker cho toàn hệ thống.
+Lệnh sẽ trả về danh sách các địa chỉ IP. Hãy xác định địa chỉ IPv4 nội bộ đang hoạt động (thường bắt đầu bằng `192.168.x.x` hoặc `172.20.x.x`, ví dụ: `172.20.10.5`). 
+*Địa chỉ này sẽ được ghi nhớ để điền vào cấu hình MQTT Broker cho toàn hệ thống.*
 
 ### A.2. Cài đặt và cấu hình Mosquitto MQTT Broker
-Trên Raspberry Pi 4, tiến hành cài đặt:
-1. Cài đặt phần mềm Mosquitto và client:
+Mosquitto từ phiên bản 2.0 trở đi mặc định chặn các kết nối từ bên ngoài mạng nội bộ và yêu cầu xác thực. Ta cần cấu hình cho phép các thiết bị ngoại vi kết nối ẩn danh (không mật khẩu):
+1. Tiến hành cài đặt dịch vụ Mosquitto cục bộ trên Pi:
    ```bash
    sudo apt update
    sudo apt install -y mosquitto mosquitto-clients
    ```
-2. Cho phép các thiết bị ngoại vi (như ESP32 và Laptop) kết nối không cần bảo mật (Anonymous) và lắng nghe cổng mạng bằng cách chỉnh sửa cấu hình:
+2. Mở tệp cấu hình Mosquitto bằng trình soạn thảo văn bản `nano`:
    ```bash
    sudo nano /etc/mosquitto/mosquitto.conf
    ```
-   Thêm vào cuối tệp cấu hình:
+3. Di chuyển xuống cuối tệp cấu hình và thêm chính xác 2 dòng sau:
    ```conf
    listener 1883
    allow_anonymous true
    ```
-3. Khởi động lại dịch vụ để áp dụng cấu hình:
+4. Lưu tệp cấu hình bằng cách nhấn tổ hợp phím `Ctrl + O`, nhấn `Enter` để xác nhận, và nhấn `Ctrl + X` để thoát.
+5. Khởi động lại dịch vụ Mosquitto để áp dụng các thay đổi:
    ```bash
    sudo systemctl restart mosquitto
+   ```
+6. Kiểm tra trạng thái hoạt động của dịch vụ để đảm bảo hoạt động bình thường (`active (running)`):
+   ```bash
+   sudo systemctl status mosquitto
    ```
 
 ---
 
 ## B. THIẾT LẬP TRÊN MÁY TÍNH TRUNG TÂM (LAPTOP - WINDOWS)
 
+Máy tính trung tâm đóng vai trò lưu trữ cơ sở dữ liệu vi phạm, chạy API Server nhận diện biển số xe (OCR), giao diện Web Streamlit Dashboard điều hành và nạp chương trình firmware cho ESP32.
+
 ### B.1. Xác định địa chỉ IP của Laptop Windows
-Mở **cmd** hoặc **PowerShell** trên Windows và chạy lệnh:
+Mở cửa sổ Command Prompt (`cmd`) hoặc PowerShell trên Laptop Windows và thực thi:
 ```cmd
 ipconfig
 ```
-Xác định địa chỉ **IPv4 Address** của card mạng đang kết nối chung mạng với Raspberry Pi (ví dụ: `172.20.10.2`). Địa chỉ này sẽ được sử dụng để Raspberry Pi gửi ảnh xe vi phạm về máy chủ.
+Tìm kiếm cạc mạng không dây (Wireless LAN adapter Wi-Fi) và ghi lại địa chỉ **IPv4 Address** (ví dụ: `172.20.10.2`). 
+*Địa chỉ này sẽ được điền vào cấu hình trên Raspberry Pi để nó đẩy hình ảnh vi phạm và siêu dữ liệu thông qua giao thức HTTP POST.*
 
-### B.2. Cấu hình Môi trường ảo Python và Thư viện
-1. Mở cửa sổ **PowerShell** tại thư mục gốc dự án (`traffic_monitoring_vn`):
+### B.2. Cấu hình Môi trường ảo Python và Cài đặt Thư viện
+Mở cửa sổ **PowerShell** tại thư mục gốc dự án (`D:\traffic_monitoring_vn`):
+1. **Khắc phục lỗi chặn thực thi Script trên Windows (Nếu có):**
+   Nếu hệ điều hành Windows chặn việc chạy script môi trường ảo, hãy thực thi lệnh sau để cấp quyền cho phiên làm việc hiện tại:
    ```powershell
-   # Khởi tạo môi trường ảo Python
+   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+   ```
+2. Khởi tạo môi trường ảo Python cô lập để tránh xung đột thư viện hệ thống:
+   ```powershell
    python -m venv .venv
-
-   # Kích hoạt môi trường ảo
+   ```
+3. Kích hoạt môi trường ảo:
+   ```powershell
    .\.venv\Scripts\Activate
    ```
-2. Cài đặt các gói thư viện phụ thuộc cho Server và Dashboard:
+4. Nâng cấp bộ quản lý gói `pip` và tiến hành cài đặt toàn bộ thư viện cần thiết:
    ```powershell
    pip install --upgrade pip
    pip install -r server/requirements.txt
@@ -77,42 +107,47 @@ Xác định địa chỉ **IPv4 Address** của card mạng đang kết nối c
    ```
 
 ### B.3. Khởi chạy Phân hệ Máy chủ & Dashboard
-Mở **hai Terminal riêng biệt** trên Windows, kích hoạt môi trường ảo `.venv` và khởi chạy các dịch vụ:
-*   **Dịch vụ API Server (FastAPI):**
+Mở **hai cửa sổ Terminal/PowerShell riêng biệt** trên Windows, kích hoạt môi trường ảo `.venv` trên cả hai và khởi chạy các dịch vụ:
+*   **Terminal 1 (FastAPI Backend Server):**
     ```powershell
     .\.venv\Scripts\Activate
     python server/main.py
     ```
-    *Dịch vụ sẽ tự động tải mô hình định vị biển số và mô hình CRNN OCR vào RAM, sẵn sàng nhận ảnh vi phạm tại cổng 8000.*
-*   **Giao diện Quản trị (Streamlit Dashboard):**
+    *Hệ thống sẽ tải toàn bộ mô hình định vị biển số (`license_best.pt`) và mô hình nhận dạng ký tự CRNN (`ocr_crnn.pt`) vào RAM. Máy chủ bắt đầu lắng nghe tại cổng `8000`. Tài liệu API Swagger có thể truy cập tại địa chỉ http://127.0.0.1:8000/docs.*
+*   **Terminal 2 (Streamlit Front-end Dashboard):**
     ```powershell
     .\.venv\Scripts\Activate
     streamlit run server/dashboard.py
     ```
-    *Giao diện giám sát thời gian thực tự động mở trên trình duyệt tại địa chỉ http://localhost:8501.*
+    *Giao diện bảng điều khiển giao thông sẽ tự động khởi động tại trình duyệt web với địa chỉ http://localhost:8501.*
 
 ---
 
 ## C. THIẾT LẬP VÀ NẠP CHƯƠNG TRÌNH CHO ESP32
 
+Mạch ESP32 đóng vai trò điều khiển đèn giao thông vật lý, chuyển đổi chu kỳ đèn và đồng bộ trạng thái màu đèn với Edge Agent biên thông qua MQTT.
+
 ### C.1. Cấu hình kết nối mạng nội bộ và MQTT
-Trên máy tính trung tâm (Laptop), mở mã nguồn dự án:
-1. Mở tệp [credentials.h](file:///d:/traffic_monitoring_vn/esp32/include/credentials.h) và cập nhật thông tin mạng Wi-Fi nội bộ:
+On your Windows Laptop, navigate to `esp32/include/`:
+1. Mở tệp [credentials.h](file:///d:/traffic_monitoring_vn/esp32/include/credentials.h) và điền chính xác thông tin mạng Wi-Fi chung:
    ```cpp
    #define WIFI_SSID "Tên_WiFi_Của_Bạn"
    #define WIFI_PASSWORD "Mật_Khẩu_WiFi"
    ```
-2. Mở tệp [mqtt_config.h](file:///d:/traffic_monitoring_vn/esp32/include/mqtt_config.h) và điền địa chỉ IP của Raspberry Pi (MQTT Broker lấy ở bước A.1):
+2. Mở tệp [mqtt_config.h](file:///d:/traffic_monitoring_vn/esp32/include/mqtt_config.h) và cập nhật địa chỉ IP của Raspberry Pi (Retrieved ở mục A.1) nơi chạy MQTT Broker:
    ```cpp
-   #define MQTT_BROKER_HOST "172.20.10.5" // Thay bằng IP thực tế của Raspberry Pi
+   #define MQTT_BROKER_HOST "172.20.10.5" // Địa chỉ IP thực tế của Raspberry Pi
    ```
 
 ### C.2. Biên dịch và nạp code cho ESP32
-1. Kết nối bo mạch ESP32 với máy tính trung tâm thông qua cáp USB.
-2. Sử dụng Terminal PlatformIO tại thư mục `esp32` để biên dịch, nạp code và theo dõi logs:
+1. Kết nối bo mạch ESP32 với máy tính trung tâm (Laptop Windows) thông qua cáp truyền dữ liệu micro-USB.
+2. **Khắc phục lỗi driver phần cứng (Nếu có):** Nếu PlatformIO báo lỗi không tìm thấy cổng COM kết nối, bạn cần tải và cài đặt driver USB-to-UART tương ứng với chip cầu trên kit ESP32 của bạn (phổ biến nhất là driver Silicon Labs **CP210x** hoặc **CH340**).
+3. Mở Terminal tại thư mục `esp32` và tiến hành nạp code:
    ```powershell
    cd esp32
+   # Nạp chương trình firmware xuống ESP32
    pio run -t upload
+   # Mở màn hình monitor theo dõi logs trực tiếp từ cổng Serial
    pio device monitor
    ```
 
@@ -120,63 +155,76 @@ Trên máy tính trung tâm (Laptop), mở mã nguồn dự án:
 
 ## D. THIẾT LẬP VÀ VẬN HÀNH EDGE AGENT TRÊN RASPBERRY PI 4
 
+Thiết bị Raspberry Pi 4 chịu trách nhiệm thu luồng ảnh camera, chạy thuật toán phát hiện (YOLOv11) và theo dõi xe (ByteTrack) tối ưu qua NCNN.
+
 ### D.1. Thiết lập Môi trường ảo Python & Cài đặt Thư viện
-1. Cài đặt các gói biên dịch và thư viện hệ thống cơ bản:
+1. Cài đặt các gói biên dịch bắt buộc và thư viện xử lý đồ họa hệ thống:
    ```bash
    sudo apt install -y build-essential cmake git libopencv-dev libomp-dev python3-pip python3-venv libvulkan-dev vulkan-tools protobuf-compiler libprotobuf-dev
    ```
-2. Tạo và kích hoạt môi trường ảo trong thư mục dự án trên Pi:
+2. Điều hướng vào thư mục dự án trên Pi và khởi tạo môi trường ảo Python:
    ```bash
    cd ~/traffic_monitoring_vn
    python3 -m venv .venv
    source .venv/bin/activate
    pip install --upgrade pip
    ```
-3. **Cấu hình loại bỏ thư viện nặng (Tối ưu hóa dung lượng):**
-   Mở tệp `edge_pi4/requirements.txt` và thêm dấu `#` vào đầu dòng `ultralytics==8.3.207` (comment dòng này) để tránh việc pip tự động tải gói PyTorch nặng hơn 1.5 GB về thẻ nhớ của Pi. Tiến hành cài đặt:
+3. **Cấu hình loại bỏ thư viện nặng (Tối ưu hóa dung lượng cho Pi):**
+   Gói thư viện `ultralytics` mặc định sẽ tự động tải các gói PyTorch rất lớn (`torch`, `torchvision` > 1.5 GB), chiếm dụng thẻ nhớ và mất nhiều thời gian cài đặt. 
+   Nếu bạn chỉ vận hành Edge Agent tối ưu hóa bằng NCNN (`agent_ncnn.py`), hãy mở tệp `edge_pi4/requirements.txt` bằng trình nano:
+   ```bash
+   nano edge_pi4/requirements.txt
+   ```
+   Thêm dấu `#` vào đầu dòng `ultralytics==8.3.207` để vô hiệu hóa nó, sau đó tiến hành cài đặt:
    ```bash
    pip install -r edge_pi4/requirements.txt
    ```
 
-### D.2. Biên dịch NCNN từ mã nguồn
-Thực hiện biên dịch và cài đặt thư viện Tencent NCNN C++ SDK và Python binding từ source:
-```bash
-cd ~
-git clone https://github.com/Tencent/ncnn.git
-cd ncnn
-git submodule update --init
-mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DNCNN_VULKAN=ON -DNCNN_SYSTEM_GLSLANG=OFF -DNCNN_DISABLE_RTTI=OFF -DNCNN_OPENMP=ON -DNCNN_BUILD_TOOLS=ON -DNCNN_INSTALL_SDK=ON -DNCNN_BUILD_BENCHMARK=OFF -DNCNN_BUILD_TESTS=OFF -DNCNN_BUILD_EXAMPLES=OFF ..
-make -j4
-sudo make install
-
-# Link thư viện tĩnh đã build vào hệ thống /usr/local
-sudo mkdir -p /usr/local/lib/ncnn 
-sudo cp -r install/include/ncnn /usr/local/include/
-sudo cp install/lib/libncnn.a /usr/local/lib/ncnn/
-sudo ldconfig
-
-# Cài đặt python binding trong môi trường ảo
-source ~/traffic_monitoring_vn/.venv/bin/activate
-pip install ncnn
-```
+### D.2. Biên dịch thư viện Tencent NCNN từ mã nguồn
+Để kích hoạt tính năng gia tốc phần cứng OpenMP đa luồng và GPU Vulkan trên Raspberry Pi 4, ta bắt buộc phải biên dịch NCNN từ repo chính thức:
+1. Thực hiện tải mã nguồn NCNN và các submodule liên quan:
+   ```bash
+   cd ~
+   git clone https://github.com/Tencent/ncnn.git
+   cd ncnn
+   git submodule update --init
+   ```
+2. Khởi tạo thư mục build và biên dịch phát hành (Release Mode):
+   ```bash
+   mkdir build && cd build
+   cmake -DCMAKE_BUILD_TYPE=Release -DNCNN_VULKAN=ON -DNCNN_SYSTEM_GLSLANG=OFF -DNCNN_DISABLE_RTTI=OFF -DNCNN_OPENMP=ON -DNCNN_BUILD_TOOLS=ON -DNCNN_INSTALL_SDK=ON -DNCNN_BUILD_BENCHMARK=OFF -DNCNN_BUILD_TESTS=OFF -DNCNN_BUILD_EXAMPLES=OFF ..
+   make -j4
+   sudo make install
+   ```
+3. Thiết lập các tệp thư viện tĩnh và header toàn cục để môi trường Python liên kết được:
+   ```bash
+   sudo mkdir -p /usr/local/lib/ncnn 
+   sudo cp -r install/include/ncnn /usr/local/include/
+   sudo cp install/lib/libncnn.a /usr/local/lib/ncnn/
+   sudo ldconfig
+   ```
+4. Kích hoạt môi trường ảo dự án và cài đặt bộ liên kết Python (Python bindings) của NCNN:
+   ```bash
+   source ~/traffic_monitoring_vn/.venv/bin/activate
+   pip install ncnn
+   ```
 
 ### D.3. Cấu hình liên kết mạng và chạy Edge Agent
-1. Cấu hình liên kết mạng tại tệp `shared/configs/settings.yaml` trên Pi:
+1. Trên Raspberry Pi, mở tệp `shared/configs/settings.yaml` để cấu hình IP kết nối:
    ```yaml
    mqtt:
-     broker: "172.20.10.5"   # Địa chỉ IP của Raspberry Pi (đã lấy ở bước A.1)
+     broker: "172.20.10.5"   # Địa chỉ IP của chính Raspberry Pi (retrieved ở bước A.1)
      port: 1883
    edge:
-     server_host: "172.20.10.2" # Địa chỉ IP của Laptop Windows (đã lấy ở bước B.1)
+     server_host: "172.20.10.2" # Địa chỉ IP của Laptop Windows (retrieved ở bước B.1)
      server_port: 8000
    ```
-2. Khởi chạy Edge Agent NCNN:
-   *   **Chế độ GUI (Có màn hình hiển thị):**
+2. Khởi chạy tiến trình Edge Agent:
+   *   **Chế độ GUI (Nếu Pi kết nối màn hình ngoài hoặc VNC):**
        ```bash
        python3 edge_pi4/agent_ncnn.py
        ```
-   *   **Chế độ Headless (Qua giao diện dòng lệnh SSH):**
+   *   **Chế độ Headless (Nếu chạy dòng lệnh qua SSH, không cần mở cửa sổ đồ họa):**
        ```bash
        python3 edge_pi4/agent_ncnn.py --headless
        ```
@@ -185,18 +233,16 @@ pip install ncnn
 
 ## E. CHẠY THỰC NGHIỆM THU THẬP SỐ LIỆU ĐO ĐẠC (PHỤC VỤ CHƯƠNG 5)
 
-Để tự động đo đạc hiệu năng vi xử lý, so sánh độ trễ suy luận của các mô hình và vẽ các biểu đồ báo cáo phục vụ trực tiếp cho Chương 5 của đồ án tốt nghiệp:
-1. Truy cập Terminal của Raspberry Pi, kích hoạt môi trường ảo:
+Để phục vụ trực tiếp cho việc thu thập số liệu thực tế viết báo cáo đồ án tốt nghiệp Chương 5 (Đo nhiệt độ CPU, xung nhịp vi xử lý, rò rỉ RAM, so sánh FPS lý thuyết giữa PyTorch và NCNN):
+1. Kết nối vào Terminal của Pi, kích hoạt môi trường ảo:
    ```bash
    cd ~/traffic_monitoring_vn
    source .venv/bin/activate
    ```
-2. Thực thi script Stress Test tự động kéo dài 60 giây:
+2. Thực thi tập lệnh stress test tự động hóa trong 60 giây:
    ```bash
    bash scripts/run_automated_tests.sh
    ```
-3. Sau khi kết thúc, truy cập thư mục kết quả sinh ra dạng `results_summary_[TIMESTAMP]/` để lấy toàn bộ các tệp phục vụ báo cáo:
-   *   `plots/hinh5_2_fps_comparison.png` (Biểu đồ FPS lý thuyết).
-   *   `plots/hinh5_4_cpu_temperature.png` (Biểu đồ nhiệt độ stress test).
-   *   `plots/hinh5_5_ram_usage.png` (Biểu đồ RAM tiêu thụ).
-   *   `BÁO_CÁO_THỰC_NGHIỆM_TỔNG_HỢP.md` (Số liệu trung bình thực tế).
+3. Sau khi kết thúc, hệ thống tự động lưu trữ báo cáo trong thư mục dạng `results_summary_[MỐC_THỜI_GIAN]/`. Bạn truy cập vào đó để thu thập:
+   - Các biểu đồ trực quan tại thư mục con `plots/` (`hinh5_2_fps_comparison.png`, `hinh5_4_cpu_temperature.png`, `hinh5_5_ram_usage.png`).
+   - Kết quả số liệu đo đạc chi tiết tại tệp `BÁO_CÁO_THỰC_NGHIỆM_TỔNG_HỢP.md`.
