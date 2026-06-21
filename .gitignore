@@ -1,0 +1,43 @@
+# PlatformIO
+.pio/
+.vscode/
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Sensitive credentials
+esp32/include/credentials.h
+
+# Output & Benchmarks
+*.log
+scripts/system_profile.csv
+shared/configs/benchmark_ncnn.csv
+shared/configs/benchmark_pt.csv
+test_bench_speed.img
+test_sqlite_benchmark.db*
+test_audit_db.db*
+output.jpg
+output_processed.mp4
+output_processed_ncnn.mp4
+
+# Large Dataset & Model Archives
+*.zip
+*.rar
+*.7z
+
+# Simulation Video Files (Optional / Large)
+*.mp4
+*.avi
+*.mkv
+
+# Temporary images/outputs generated at runtime
+plates/
+

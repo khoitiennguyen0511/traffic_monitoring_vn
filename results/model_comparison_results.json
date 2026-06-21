@@ -1,0 +1,38 @@
+[
+    {
+        "name": "PyTorch 320x320 (vehicle_custom_best_320.pt)",
+        "fps": 4.5,
+        "avg_ms": 222.2,
+        "p95_ms": 302.7
+    },
+    {
+        "name": "NCNN Original 320x320 (Non-opt)",
+        "fps": 10.5,
+        "avg_ms": 95.3,
+        "p95_ms": 103.5
+    },
+    {
+        "name": "NCNN FP16 320x320 (Optimized)",
+        "fps": 10.5,
+        "avg_ms": 95.0,
+        "p95_ms": 99.9
+    },
+    {
+        "name": "PyTorch 480x480 (vehicle_custom_best.pt)",
+        "fps": 3.3,
+        "avg_ms": 299.2,
+        "p95_ms": 306.4
+    },
+    {
+        "name": "NCNN Original 480x480 (Non-opt)",
+        "fps": 5.1,
+        "avg_ms": 197.2,
+        "p95_ms": 204.4
+    },
+    {
+        "name": "NCNN FP16 480x480 (Optimized)",
+        "fps": 5.1,
+        "avg_ms": 197.9,
+        "p95_ms": 206.4
+    }
+]

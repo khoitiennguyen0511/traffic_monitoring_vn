@@ -1,0 +1,79 @@
+# ==============================================================================
+# CẤU HÌNH HỆ THỐNG GIÁM SÁT GIAO THÔNG THÔNG MINH (SETTINGS)
+# Phục vụ đồ án tốt nghiệp - Mô phỏng thời gian thực & Thực nghiệm phần cứng
+# ==============================================================================
+
+server:
+  host: "0.0.0.0"       # Địa chỉ IP bind của FastAPI server
+  port: 8000            # Cổng dịch vụ API
+  api_prefix: "/api/v1" # Tiền tố các endpoints API
+
+mqtt:
+  broker: "172.20.10.5"   # IP máy chạy Mosquitto Broker (khớp với esp32/include/mqtt_config.h)
+  port: 1883
+  topic_vehicle_count: "he_thong_giam_sat_luu_luong/vehicle_count"
+  topic_green_time_cmd: "he_thong_giam_sat_luu_luong/green_time_cmd"
+  topic_light_state:    "he_thong_giam_sat_luu_luong/light_state"
+  topic_control: "he_thong_giam_sat_luu_luong/control"
+  topic_alert: "traffic/alert"
+
+edge:
+  # ── Nguồn video / camera ──────────────────────────────────────────────────
+  # 0          → chạy video mô phỏng cục bộ 'vehicle_counting.mp4'
+  # "/dev/video0" hoặc 1 → USB Camera / Pi Camera Module
+  # "rtsp://..."  → IP Camera RTSP stream
+  camera_source: 0
+  simulation_mode: true
+
+  # ── Địa chỉ IP máy chủ FastAPI (server chạy OCR) ─────────────────────────
+  # Thay bằng IP thực của máy chạy server khi deploy trên Raspberry Pi
+  server_host: "172.20.10.2"
+
+  # ── Đường dẫn mô hình nhận diện ──────────────────────────────────────────
+  # NCNN (tối ưu Pi): "shared/models/vehicle_best_ncnn_model"
+  # PyTorch gốc:      "shared/models/vehicle_best.pt"
+  model_path: "shared/models/vehicle_custom_best_320_ncnn_model"
+
+  # ── Cấu hình inference ────────────────────────────────────────────────────
+  target_size: 320            # Kích thước ảnh đầu vào NCNN (px) - bắt buộc là 320 để khớp cấu hình mô hình
+  num_threads: 3              # Số luồng CPU sử dụng cho suy luận NCNN (3 là tối ưu cho Raspberry Pi 4)
+  confidence_threshold: 0.25  # Ngưỡng tin cậy phát hiện
+  nms_threshold: 0.45         # Ngưỡng IoU cho Non-Maximum Suppression
+  skip_factor: 2              # Chạy inference mỗi N frame (tăng FPS hiển thị)
+
+  # ── Cấu hình hiển thị ─────────────────────────────────────────────────────
+  display_width: 1280
+  display_height: 720
+  # ── Tỉ lệ thu nhỏ cửa sổ hiển thị (không ảnh hưởng chất lượng inference) ──
+  # 1.0 = 1280×720 (màn hình lớn/VNC)
+  # 0.75 = 960×540  (màn hình 7" / nhỏ)
+  # 0.5  = 640×360  (màn hình rất nhỏ)
+  display_scale: 0.75
+  # true = toàn màn hình (ẩn thanh tiêu đề cửa sổ)
+  fullscreen: false
+
+  # ── Cấu hình hiệu năng & ghi log ─────────────────────────────────────────
+  mqtt_publish_interval_frames: 30    # Gửi MQTT mỗi N frame
+  benchmark_interval_frames: 60       # Ghi CSV benchmark mỗi N frame
+  violation_cooldown_sec: 5.0         # Thời gian chờ trước khi cùng xe bị phạt lại
+
+  # ── Thư mục ảnh biển số mô phỏng ─────────────────────────────────────────
+  plates_dir: "plates"
+
+  # ── Vùng đếm lưu lượng (PolygonZone) ─────────────────────────────────────
+  # Mỗi vùng là danh sách 4 điểm [x_frac, y_frac] (tỷ lệ 0.0-1.0 so với frame)
+  # Chiều kim đồng hồ từ góc trên-trái
+  # Vùng 1: Làn phải (trái màn hình) | Vùng 2: Làn trên
+  # Vùng 3: Làn phải (phải màn hình) | Vùng 4: Làn dưới (ngã tư)
+  regions:
+    "1": [[0.01, 0.28], [0.22, 0.28], [0.22, 0.90], [0.01, 0.90]]
+    "2": [[0.30, 0.01], [0.78, 0.01], [0.78, 0.22], [0.30, 0.22]]
+    "3": [[0.80, 0.22], [0.99, 0.22], [0.99, 0.85], [0.80, 0.85]]
+    "4": [[0.23, 0.88], [0.72, 0.88], [0.72, 0.99], [0.23, 0.99]]
+
+  # ── Vạch cấm dừng xe (LineZone) ──────────────────────────────────────────
+  # Tọa độ theo tỷ lệ phần trăm của frame, nằm ngang
+  violation_line:
+    x1_frac: 0.48   # Điểm đầu vạch (x)
+    x2_frac: 0.70   # Điểm cuối vạch (x)
+    y_frac:  0.90   # Độ cao vạch (y)

@@ -1,0 +1,12 @@
+# Trích xuất từ các file .ipynb (Vehicle_License_OCR)
+ultralytics
+timm
+torch
+torchvision
+pillow
+# Các thư viện phục vụ Web API & MQTT
+fastapi
+uvicorn[standard]
+python-multipart
+paho-mqtt
+pyyaml

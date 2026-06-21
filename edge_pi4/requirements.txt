@@ -1,0 +1,11 @@
+# Các thư viện lõi AI (Phiên bản đã được tối ưu hóa riêng cho Raspberry Pi 4)
+numpy==1.26.4
+opencv-python==4.10.0.84
+supervision==0.26.1
+ultralytics==8.3.207
+# onnxruntime==1.23.1
+paho-mqtt
+
+# Các thư viện phục vụ Agent & Giao tiếp mạng
+requests
+pyyaml
