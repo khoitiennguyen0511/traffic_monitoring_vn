@@ -9,3 +9,8 @@ paho-mqtt
 # Các thư viện phục vụ Agent & Giao tiếp mạng
 requests
 pyyaml
+
+# Thư viện phục vụ kiểm thử & vẽ biểu đồ (scripts)
+psutil
+matplotlib
+
