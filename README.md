@@ -197,8 +197,8 @@ edge:
 ```
 
 #### Step 2.5: Run the Edge Agent
-With the virtual environment activated, run the main agent:
-*   **GUI Mode:**
+With the virtual environment activated, run the agent:
+*   **GUI Mode (Displays Video Frame):**
     ```bash
     python3 edge_pi4/agent_ncnn.py
     ```
@@ -206,3 +206,64 @@ With the virtual environment activated, run the main agent:
     ```bash
     python3 edge_pi4/agent_ncnn.py --headless
     ```
+*   **PyTorch Fallback Mode (If NCNN is not used):**
+    ```bash
+    python3 edge_pi4/agent_pt.py
+    ```
+
+---
+
+### 3. Verification, Benchmarking & Optimization (Optional)
+
+#### Step 3.1: Environment Verification
+Verify that your Python packages, libraries (OpenCV NEON/OpenMP build flags), hardware settings (CPU frequency governor), and model weights are ready:
+```bash
+python3 scripts/check_env_pi.py
+```
+
+#### Step 3.2: Model Performance Benchmarking
+Compare model load times, inference latencies, and theoretical FPS between PyTorch (`.pt`) and NCNN (Original vs Optimized) at 320x320 and 480x480 resolution:
+```bash
+python3 scripts/compare_models.py
+```
+*The benchmark report will be written to `shared/configs/model_comparison_results.md`.*
+
+#### Step 3.3: Automated Validation & Telemetry Suite
+Run the automated stress-test script to profile system resource usage (CPU temperature, CPU load, RAM usage) under load:
+```bash
+bash scripts/run_automated_tests.sh
+```
+
+#### Step 3.4: Model Optimization & INT8 Quantization
+If you want to optimize your own custom-trained YOLO model (pre-optimized FP16 model weights are already provided in the repository under `shared/models/`):
+
+1. **Optimize Model to FP16:**
+   ```bash
+   cd ~/ncnn/build/tools
+   ./ncnnoptimize \
+     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model.ncnn.param \
+     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model.ncnn.bin \
+     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-opt.param \
+     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-opt.bin 0
+   ```
+
+2. **Generate INT8 Calibration Table:**
+   Create a `calib_list.txt` containing absolute paths to test images, then run:
+   ```bash
+   ./quantize/ncnn2table \
+     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-opt.param \
+     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-opt.bin \
+     calib_list.txt \
+     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model.table \
+     mean=0 norm=0.0039216 shape=320,320,3 pixel=BGR thread=4 method=aciq
+   ```
+
+3. **Convert to INT8 Model:**
+   ```bash
+   ./quantize/ncnn2int8 \
+     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-opt.param \
+     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-opt.bin \
+     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-int8.param \
+     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-int8.bin \
+     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model.table
+   ```
