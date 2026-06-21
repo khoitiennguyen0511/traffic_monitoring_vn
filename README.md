@@ -117,7 +117,6 @@ Open PowerShell inside the root `traffic_monitoring_vn` directory on your Laptop
    ```powershell
    pip install --upgrade pip
    pip install -r server/requirements.txt
-   pip install streamlit
    ```
 
 #### Step 2.3: Start FastAPI Server & Streamlit Dashboard
