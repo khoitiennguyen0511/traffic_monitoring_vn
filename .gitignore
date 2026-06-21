@@ -41,3 +41,6 @@ output_processed_ncnn.mp4
 # Temporary images/outputs generated at runtime
 plates/
 
+# Thesis documents folder
+results/Viet_bao_cao/
+
