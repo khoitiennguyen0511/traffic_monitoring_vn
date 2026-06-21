@@ -135,6 +135,9 @@ Mở Terminal của Raspberry Pi và thực hiện các lệnh sau:
    pip install --upgrade pip
    pip install -r edge_pi4/requirements.txt
    ```
+   > [!TIP]
+   > **Tối ưu hóa dung lượng:** Thư viện `ultralytics` sẽ kéo theo PyTorch (`torch`) nặng hơn 1.5 GB về máy Pi. Nếu chỉ chạy bản NCNN tối ưu (`agent_ncnn.py`), bạn có thể mở tệp [edge_pi4/requirements.txt](file:///d:/traffic_monitoring_vn/edge_pi4/requirements.txt) và thêm dấu `#` vào đầu dòng `ultralytics==8.3.207` trước khi chạy `pip install` để tránh tải các thư viện không cần thiết này.
+
 3. **Biên dịch NCNN SDK từ Kho lưu trữ để tối ưu hóa Vulkan GPU & OpenMP:**
    ```bash
    cd ~
