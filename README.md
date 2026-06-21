@@ -1,47 +1,90 @@
-# Intelligent Traffic Monitoring and Control System (YOLOv11 + NCNN + ESP32)
+# Intelligent Traffic Monitoring and Adaptive Control System
 
-An end-to-end intelligent traffic monitoring system that detects lane-crossing violations during red lights using a high-performance Edge AI pipeline (YOLOv11 + ByteTrack) running on a Raspberry Pi 4. The system communicates via MQTT with an ESP32 microcontroller to adapt traffic light timing in real-time based on density, sends violation snapshots to a Central Laptop Server via HTTP, performs license plate recognition (CRNN OCR), and displays live statistics on a Streamlit Web Dashboard.
+An end-to-end distributed Edge AI system designed to detect traffic lane-crossing violations during red lights and dynamically adapt traffic light cycles based on real-time vehicle density. 
+
+The system leverages a high-performance Edge AI pipeline (**YOLOv11** object detector and **ByteTrack** multi-object tracker) optimized using **Tencent NCNN** on a **Raspberry Pi 4**, communicates asynchronously via **MQTT** with an **ESP32** microcontroller, offloads violation evidence to a **Central Laptop Server (FastAPI)** for license plate recognition (**CRNN OCR**), and visualizes real-time metrics on a **Streamlit Web Dashboard**.
 
 ---
 
-## 📐 Architecture Overview
+## 📐 Architecture & Data Flow
+
 ```mermaid
 graph TD
-    subgraph Edge_Devices [Raspberry Pi 4 Edge Agent]
-        Camera[Camera / Video Source] --> Agent[Edge Agent: YOLOv11 & ByteTrack]
-        MQTT[Mosquitto MQTT Broker]
+    subgraph Edge_Agent [Raspberry Pi 4 - 172.20.10.5]
+        Camera[Camera / Video Input] --> Detection[NCNN YOLOv11 & ByteTrack]
+        MQTTBroker[Mosquitto MQTT Broker]
     end
 
-    subgraph Central_Server [Laptop Windows Server]
-        FastAPI[Central Server: FastAPI & PyTorch OCR]
+    subgraph Central_Laptop [Windows Host - 172.20.10.2]
+        FastAPI[FastAPI Server & CRNN OCR]
         Dashboard[Streamlit Web Dashboard]
-        ESP32[ESP32 Traffic Light Controller]
+        DB[(SQLite: traffic.db)]
     end
 
-    Agent -- 1. Publish vehicle density --> MQTT
-    MQTT -- 2. Read density for adaptive timings --> ESP32
-    ESP32 -- 3. Publish light state changes --> MQTT
-    MQTT -- 4. Sync red light state --> Agent
-    Agent -- 5. HTTP POST violation snapshot --> FastAPI
-    FastAPI -- 6. Process License Plate OCR --> DB[(sqlite: traffic.db)]
-    Dashboard -- 7. Fetch real-time violations --> DB
+    subgraph Controller [ESP32 Microcontroller]
+        ESP32[NodeMCU ESP32 & Led Matrix]
+    end
+
+    Detection -- "1. Publish region vehicle count (JSON)" --> MQTTBroker
+    MQTTBroker -- "2. Read density for adaptive cycles" --> ESP32
+    ESP32 -- "3. Publish current light state" --> MQTTBroker
+    MQTTBroker -- "4. Sync red light state" --> Detection
+    Detection -- "5. HTTP POST violation image & metadata" --> FastAPI
+    FastAPI -- "6. Perform License Plate OCR & Save" --> DB
+    Dashboard -- "7. Fetch live violation list" --> DB
 ```
 
 ---
 
-## 🛠️ Step-by-Step Setup Guide (From Scratch)
+## 📂 Repository Structure
 
-This project is split into two components:
-1. **💻 Laptop Windows (Central Server):** Runs the FastAPI OCR Server, Streamlit Dashboard, and uploads ESP32 firmware.
-2. **🍓 Raspberry Pi 4 (Edge Agent):** Runs the local Mosquitto MQTT Broker and the NCNN Object Detector.
+```
+.
+├── edge_pi4/            # Raspberry Pi 4 Edge Agent (Python)
+│   ├── core/            # Inference, tracking, and capture threads
+│   │   ├── detection.py # YOLOv11 NCNN wrapper
+│   │   ├── tracking.py  # Traffic flow analyzer & ByteTrack wrapper
+│   │   └── pipeline.py  # Multi-threaded capture pipeline
+│   ├── network/         # HTTP and MQTT async clients
+│   │   ├── http_client.py
+│   │   └── mqtt_manager.py
+│   ├── cpp/             # Pure C++ NCNN implementation (Alternative)
+│   ├── agent_ncnn.py    # Main NCNN Edge Agent runner
+│   ├── agent_pt.py      # PyTorch fallback Edge Agent runner
+│   └── requirements.txt # Python package requirements for Pi
+├── esp32/               # ESP32 Traffic Light Controller (PlatformIO Project)
+│   ├── include/         # Globals, MQTT configurations, and credentials
+│   └── src/             # Firmware source code (main.cpp, logic, network)
+├── server/              # Central Laptop Server (FastAPI & Streamlit)
+│   ├── api/             # FastAPI routing and schema layers
+│   ├── core/            # Database handlers & CRNN OCR engine
+│   ├── main.py          # FastAPI application entrypoint
+│   ├── dashboard.py     # Streamlit Web App entrypoint
+│   └── requirements.txt # Python package requirements for Server
+├── scripts/             # Telemetry, health check, and benchmarking scripts
+│   ├── check_env_pi.py  # Diagnostics and environment check
+│   ├── compare_models.py# Benchmark PyTorch vs NCNN
+│   ├── audit.py         # Hardware profiling
+│   └── run_automated_tests.sh # Stress test runner & report generator
+├── shared/              # Shared assets across devices
+│   ├── configs/         # Central configuration files (settings.yaml)
+│   └── models/          # NCNN & PyTorch model weight files
+└── README.md            # Main project documentation
+```
 
 ---
 
-### 💻 1. Central Server Setup (Laptop - Windows)
+## 🛠️ Step-by-Step Installation & Run Guide
 
-#### Step 1.1: Install Dependencies
-Open PowerShell inside the cloned `traffic_monitoring_vn` directory:
-1. Create a Python Virtual Environment:
+This distributed system is divided into two primary environments:
+1. **Central Server (Laptop / Windows PC):** Hosts the FastAPI OCR engine, Streamlit Dashboard, SQLite database, and compiles/flashes the ESP32 firmware.
+2. **Edge Node (Raspberry Pi 4):** Hosts the local Mosquitto MQTT Broker and runs the Edge AI pipeline.
+
+### 1. Central Server Setup (Laptop - Windows)
+
+#### Step 1.1: Environment Setup
+Open PowerShell inside the root `traffic_monitoring_vn` directory:
+1. Create a Python virtual environment:
    ```powershell
    python -m venv .venv
    ```
@@ -49,42 +92,44 @@ Open PowerShell inside the cloned `traffic_monitoring_vn` directory:
    ```powershell
    .\.venv\Scripts\Activate
    ```
-3. Install required Python packages:
+3. Install dependencies:
    ```powershell
    pip install --upgrade pip
    pip install -r server/requirements.txt
    pip install streamlit
    ```
 
-#### Step 1.2: Find your Laptop's Local IP Address
-Open Command Prompt (`cmd`) and run:
+#### Step 1.2: Retrieve Network IP Address
+Run the following command in cmd/PowerShell:
 ```cmd
 ipconfig
 ```
-Locate your **IPv4 Address** (e.g. `172.20.10.2`). This IP will be referenced by the ESP32 and Raspberry Pi.
+Identify the **IPv4 Address** of the active network adapter (e.g., `172.20.10.2`). This IP will be referenced by the Raspberry Pi and ESP32 to upload data.
 
-#### Step 1.3: Start FastAPI and Streamlit Dashboard
-Open **two separate terminals**, activate `.venv`, and run:
-*   **Terminal 1 (FastAPI Server):**
+#### Step 1.3: Start FastAPI Server & Web Dashboard
+Open **two separate terminals** on your Windows Laptop, activate `.venv` on both, and run:
+*   **Terminal 1 (FastAPI Backend Server):**
     ```powershell
     .\.venv\Scripts\Activate
     python server/main.py
     ```
-*   **Terminal 2 (Streamlit Dashboard):**
+    *Starts the FastAPI backend at `http://127.0.0.1:8000`. You can access the API Swagger docs at `http://127.0.0.1:8000/docs`.*
+
+*   **Terminal 2 (Streamlit Front-end Dashboard):**
     ```powershell
     .\.venv\Scripts\Activate
     streamlit run server/dashboard.py
     ```
-    *Access the Web Dashboard at: http://localhost:8501*
+    *Starts the management web interface at `http://localhost:8501`.*
 
 #### Step 1.4: Upload Firmware to ESP32
-1. Connect your ESP32 board to the laptop using a micro-USB cable.
-2. Edit [credentials.h](file:///d:/traffic_monitoring_vn/esp32/include/credentials.h) to configure your Wi-Fi settings:
+1. Connect the ESP32 board to the laptop via a micro-USB cable.
+2. Edit [credentials.h](file:///d:/traffic_monitoring_vn/esp32/include/credentials.h) to match your Wi-Fi credentials:
    ```cpp
-   #define WIFI_SSID "Your_WiFi_Name"
+   #define WIFI_SSID "Your_WiFi_SSID"
    #define WIFI_PASSWORD "Your_WiFi_Password"
    ```
-3. Edit [mqtt_config.h](file:///d:/traffic_monitoring_vn/esp32/include/mqtt_config.h) to configure the MQTT Broker IP address (this is the IP of your Raspberry Pi, e.g. `172.20.10.5`):
+3. Edit [mqtt_config.h](file:///d:/traffic_monitoring_vn/esp32/include/mqtt_config.h) to configure the target MQTT Broker IP address (this should point to the IP of the Raspberry Pi, e.g., `172.20.10.5`):
    ```cpp
    #define MQTT_BROKER_HOST "172.20.10.5"
    ```
@@ -97,81 +142,85 @@ Open **two separate terminals**, activate `.venv`, and run:
 
 ---
 
-### 🍓 2. Edge Agent Setup (Raspberry Pi 4)
+### 2. Edge Agent Setup (Raspberry Pi 4)
 
-#### Step 2.1: Install & Configure Mosquitto MQTT Broker
-On the Raspberry Pi, run the following commands:
-1. Install Mosquitto:
+#### Step 2.1: Configure Mosquitto MQTT Broker
+On the Raspberry Pi terminal, install and configure Mosquitto:
+1. Install package and client tools:
    ```bash
    sudo apt update
    sudo apt install -y mosquitto mosquitto-clients
    ```
-2. Enable external connections (e.g., from ESP32) and anonymous access:
+2. Enable external connections (allowing ESP32 to publish/subscribe) by editing the config:
    ```bash
    sudo nano /etc/mosquitto/mosquitto.conf
    ```
-   Add these lines at the bottom:
+   Add the following listener configuration at the bottom:
    ```conf
    listener 1883
    allow_anonymous true
    ```
-3. Restart Mosquitto:
+3. Restart the service to apply settings:
    ```bash
    sudo systemctl restart mosquitto
    ```
-   *(Retrieve Pi's IP address by running `hostname -I` (e.g., `172.20.10.5`)).*
+   *Retrieve your Pi's local IP address using `hostname -I` (e.g., `172.20.10.5`).*
 
 #### Step 2.2: Setup Virtual Environment & Python Packages
-1. Install system prerequisites:
+1. Install essential compiler tools, OpenCV, OpenMP, and Vulkan packages:
    ```bash
    sudo apt install -y build-essential cmake git libopencv-dev libomp-dev python3-pip python3-venv libvulkan-dev vulkan-tools protobuf-compiler libprotobuf-dev
    ```
-2. Create and activate a virtual environment:
+2. Setup the virtual environment:
    ```bash
    cd ~/traffic_monitoring_vn
    python3 -m venv .venv
    source .venv/bin/activate
    pip install --upgrade pip
    ```
-3. **Storage Optimization Tip:** Goining `ultralytics` pulls heavy libraries like PyTorch (`torch`) which takes >1.5GB of disk space. To avoid this, open [edge_pi4/requirements.txt](file:///d:/traffic_monitoring_vn/edge_pi4/requirements.txt) and comment out `ultralytics==8.3.207` (add `#` at the beginning of the line). Then install requirements:
+3. **Storage Optimization Tip:**
+   The `ultralytics` package automatically installs massive PyTorch binaries (`torch` & `torchvision`), which take >1.5 GB of storage. 
+   If you **only plan to run the NCNN optimized Edge Agent (`agent_ncnn.py`)**, open [edge_pi4/requirements.txt](file:///d:/traffic_monitoring_vn/edge_pi4/requirements.txt) and comment out `ultralytics==8.3.207` (add `#` at the beginning of the line). Then install requirements:
    ```bash
    pip install -r edge_pi4/requirements.txt
    ```
-4. Compile NCNN from source for Vulkan/OpenMP hardware acceleration:
-   ```bash
-   cd ~
-   git clone https://github.com/Tencent/ncnn.git
-   cd ncnn
-   git submodule update --init
-   mkdir build && cd build
-   cmake -DCMAKE_BUILD_TYPE=Release -DNCNN_VULKAN=ON -DNCNN_SYSTEM_GLSLANG=OFF -DNCNN_DISABLE_RTTI=OFF -DNCNN_OPENMP=ON -DNCNN_BUILD_TOOLS=ON -DNCNN_INSTALL_SDK=ON -DNCNN_BUILD_BENCHMARK=OFF -DNCNN_BUILD_TESTS=OFF -DNCNN_BUILD_EXAMPLES=OFF ..
-   make -j4
-   sudo make install
 
-   # Link static libraries globally
-   sudo mkdir -p /usr/local/lib/ncnn 
-   sudo cp -r install/include/ncnn /usr/local/include/
-   sudo cp install/lib/libncnn.a /usr/local/lib/ncnn/
-   sudo ldconfig
+#### Step 2.3: Compile NCNN from Repository
+To compile the high-performance Tencent NCNN library with Vulkan GPU and OpenMP CPU multi-threading support:
+```bash
+cd ~
+git clone https://github.com/Tencent/ncnn.git
+cd ncnn
+git submodule update --init
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DNCNN_VULKAN=ON -DNCNN_SYSTEM_GLSLANG=OFF -DNCNN_DISABLE_RTTI=OFF -DNCNN_OPENMP=ON -DNCNN_BUILD_TOOLS=ON -DNCNN_INSTALL_SDK=ON -DNCNN_BUILD_BENCHMARK=OFF -DNCNN_BUILD_TESTS=OFF -DNCNN_BUILD_EXAMPLES=OFF ..
+make -j4
+sudo make install
 
-   # Install NCNN python binding in venv
-   source ~/traffic_monitoring_vn/.venv/bin/activate
-   pip install ncnn
-   ```
+# Deploy headers and static library globally
+sudo mkdir -p /usr/local/lib/ncnn 
+sudo cp -r install/include/ncnn /usr/local/include/
+sudo cp install/lib/libncnn.a /usr/local/lib/ncnn/
+sudo ldconfig
 
-#### Step 2.3: Configure Server Connections
+# Install ncnn python binding in virtual environment
+source ~/traffic_monitoring_vn/.venv/bin/activate
+pip install ncnn
+```
+
+#### Step 2.4: Configure settings.yaml
 Edit `shared/configs/settings.yaml` on the Raspberry Pi to set up IP mappings:
 ```yaml
 mqtt:
   broker: "172.20.10.5"   # Raspberry Pi IP
   port: 1883
 edge:
-  server_host: "172.20.10.2" # Laptop IP
+  server_host: "172.20.10.2" # Laptop Windows IP
   server_port: 8000
 ```
 
-#### Step 2.4: Run the Edge Agent
-Make sure your virtual environment is activated and launch the NCNN agent:
+#### Step 2.5: Run the Edge Agent
+With the virtual environment activated, run the main agent:
 *   **GUI Mode:**
     ```bash
     python3 edge_pi4/agent_ncnn.py
@@ -183,6 +232,7 @@ Make sure your virtual environment is activated and launch the NCNN agent:
 
 ---
 
-## 🎓 Graduation Thesis Evaluations & Benchmarks (Chương 5)
+## 🎓 Graduation Thesis Evaluations & Benchmarking (Chương 5)
+
 If you are running evaluations for your thesis report (e.g. testing model accuracy, latency, logging hardware stress tests, plotting telemetry charts), refer to the thesis appendix document:
 👉 [phu_luc_huong_dan_van_hanh.md](file:///d:/traffic_monitoring_vn/results/Viet_bao_cao/phu_luc_huong_dan_van_hanh.md)
