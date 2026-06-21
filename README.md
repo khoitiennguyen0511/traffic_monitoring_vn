@@ -234,36 +234,14 @@ Run the automated stress-test script to profile system resource usage (CPU tempe
 bash scripts/run_automated_tests.sh
 ```
 
-#### Step 3.4: Model Optimization & INT8 Quantization
-If you want to optimize your own custom-trained YOLO model (pre-optimized FP16 model weights are already provided in the repository under `shared/models/`):
+#### Step 3.4: Model Optimization (FP16)
+If you want to optimize your own custom-trained YOLO model to FP16 (pre-optimized FP16 model weights are already provided in the repository under `shared/models/`):
 
-1. **Optimize Model to FP16:**
-   ```bash
-   cd ~/ncnn/build/tools
-   ./ncnnoptimize \
-     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model.ncnn.param \
-     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model.ncnn.bin \
-     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-opt.param \
-     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-opt.bin 0
-   ```
-
-2. **Generate INT8 Calibration Table:**
-   Create a `calib_list.txt` containing absolute paths to test images, then run:
-   ```bash
-   ./quantize/ncnn2table \
-     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-opt.param \
-     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-opt.bin \
-     calib_list.txt \
-     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model.table \
-     mean=0 norm=0.0039216 shape=320,320,3 pixel=BGR thread=4 method=aciq
-   ```
-
-3. **Convert to INT8 Model:**
-   ```bash
-   ./quantize/ncnn2int8 \
-     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-opt.param \
-     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-opt.bin \
-     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-int8.param \
-     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-int8.bin \
-     ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model.table
-   ```
+```bash
+cd ~/ncnn/build/tools
+./ncnnoptimize \
+  ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model.ncnn.param \
+  ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model.ncnn.bin \
+  ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-opt.param \
+  ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-opt.bin 0
+```
