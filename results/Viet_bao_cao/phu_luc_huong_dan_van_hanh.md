@@ -7,6 +7,16 @@ Tài liệu này cung cấp hướng dẫn kỹ thuật chi tiết nhằm thiế
 
 ---
 
+## THỰC HIỆN TẢI MÃ NGUỒN (GIT CLONE)
+
+Trước khi tiến hành cài đặt các thành phần, thực hiện tải mã nguồn dự án về cả Máy tính trung tâm (Laptop) và Thiết bị biên (Raspberry Pi 4):
+```bash
+git clone https://github.com/khoitiennguyen0511/traffic_monitoring_vn.git
+cd traffic_monitoring_vn
+```
+
+---
+
 ## A. THIẾT LẬP VÀ VẬN HÀNH TRÊN MÁY TÍNH TRUNG TÂM (LAPTOP)
 
 Máy tính trung tâm sử dụng hệ điều hành Windows, chịu trách nhiệm vận hành cơ sở dữ liệu SQLite, FastAPI Web Server phục vụ nhận diện biển số xe (OCR), giao diện Web Dashboard Streamlit và là trạm nạp code cho ESP32.

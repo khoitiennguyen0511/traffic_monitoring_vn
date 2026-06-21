@@ -66,9 +66,10 @@ Since Mosquitto 2.0+, anonymous connection is disabled and only binds to local i
 
 ## Project Setup
 
-### 1. Create and Activate Virtual Environment
+### 1. Clone Repository & Setup Environment
 Clone this project onto the Raspberry Pi, navigate to the project directory, and create a Python virtual environment:
 ```bash
+git clone https://github.com/khoitiennguyen0511/traffic_monitoring_vn.git
 cd ~/traffic_monitoring_vn
 python3 -m venv .venv
 source .venv/bin/activate
@@ -80,6 +81,12 @@ Install the required packages for the Edge Agent, including OpenCV via pip:
 pip install --upgrade pip
 pip install -r edge_pi4/requirements.txt
 ```
+
+> [!TIP]
+> **Tối ưu hóa dung lượng (Khuyên dùng cho Pi):**
+> Gói `ultralytics` sẽ tự động tải các thư viện cực kỳ nặng như PyTorch (`torch`), `torchvision` (chiếm >1.5 GB ổ cứng và cài đặt rất lâu). 
+> Nếu bạn **chỉ muốn chạy Edge Agent NCNN tối ưu (`agent_ncnn.py`)**, hãy mở tệp [edge_pi4/requirements.txt](file:///d:/traffic_monitoring_vn/edge_pi4/requirements.txt) và comment dòng `ultralytics==8.3.207` (thêm dấu `#` ở đầu dòng) trước khi cài đặt. Các script NCNN vẫn sẽ hoạt động bình thường mà không cần PyTorch.
+
 
 ### 3. Compile NCNN from Repository (Vulkan + OpenMP Enabled)
 To build the high-performance NCNN C++ SDK from the official source repository:
@@ -150,8 +157,9 @@ bash scripts/run_automated_tests.sh
 
 ---
 
-## [OPTIONAL] INT8 Quantization (ncnn)
-*Note: If you cloned the repository directly, you can use the pre-optimized weights included in `shared/models/vehicle_custom_best_320_ncnn_model` and skip this section. This section is only necessary if you train and deploy a custom YOLO model.*
+## [OPTIONAL] Model Optimization (FP16) & Quantization (INT8)
+*Note: If you cloned this repository directly, you can use the pre-optimized FP16 model weights (`model-opt.param` and `model-opt.bin`) already included in the `shared/models/vehicle_custom_best_320_ncnn_model/` folder. Running this section is optional and is only required if you want to optimize or quantize your own custom-trained YOLO model.*
+
 
 ### 1. Model Optimization
 ```bash

@@ -1,42 +1,12 @@
-# Intelligent Traffic Monitoring and Adaptive Control System
+# Intelligent Traffic Monitoring and Adaptive Control System (RASPBERRY PI 4 + YOLOv11 + NCNN + ESP32)
 
 An end-to-end distributed Edge AI system designed to detect traffic lane-crossing violations during red lights and dynamically adapt traffic light cycles based on real-time vehicle density. 
 
-The system leverages a high-performance Edge AI pipeline (**YOLOv11** object detector and **ByteTrack** multi-object tracker) optimized using **Tencent NCNN** on a **Raspberry Pi 4**, communicates asynchronously via **MQTT** with an **ESP32** microcontroller, offloads violation evidence to a **Central Laptop Server (FastAPI)** for license plate recognition (**CRNN OCR**), and visualizes real-time metrics on a **Streamlit Web Dashboard**.
+The system leverages a high-performance Edge AI pipeline (YOLOv11 object detector and ByteTrack multi-object tracker) optimized using Tencent NCNN on a Raspberry Pi 4, communicates asynchronously via MQTT with an ESP32 microcontroller, offloads violation evidence to a Central Laptop Server (FastAPI) for license plate recognition (CRNN OCR), and visualizes real-time metrics on a Streamlit Web Dashboard.
 
 ---
 
-## 📐 Architecture & Data Flow
-
-```mermaid
-graph TD
-    subgraph Edge_Agent [Raspberry Pi 4 - 172.20.10.5]
-        Camera[Camera / Video Input] --> Detection[NCNN YOLOv11 & ByteTrack]
-        MQTTBroker[Mosquitto MQTT Broker]
-    end
-
-    subgraph Central_Laptop [Windows Host - 172.20.10.2]
-        FastAPI[FastAPI Server & CRNN OCR]
-        Dashboard[Streamlit Web Dashboard]
-        DB[(SQLite: traffic.db)]
-    end
-
-    subgraph Controller [ESP32 Microcontroller]
-        ESP32[NodeMCU ESP32 & Led Matrix]
-    end
-
-    Detection -- "1. Publish region vehicle count (JSON)" --> MQTTBroker
-    MQTTBroker -- "2. Read density for adaptive cycles" --> ESP32
-    ESP32 -- "3. Publish current light state" --> MQTTBroker
-    MQTTBroker -- "4. Sync red light state" --> Detection
-    Detection -- "5. HTTP POST violation image & metadata" --> FastAPI
-    FastAPI -- "6. Perform License Plate OCR & Save" --> DB
-    Dashboard -- "7. Fetch live violation list" --> DB
-```
-
----
-
-## 📂 Repository Structure
+## Repository Structure
 
 ```
 .
@@ -74,16 +44,23 @@ graph TD
 
 ---
 
-## 🛠️ Step-by-Step Installation & Run Guide
+## Installation & Run Guide
 
 This distributed system is divided into two primary environments:
 1. **Central Server (Laptop / Windows PC):** Hosts the FastAPI OCR engine, Streamlit Dashboard, SQLite database, and compiles/flashes the ESP32 firmware.
 2. **Edge Node (Raspberry Pi 4):** Hosts the local Mosquitto MQTT Broker and runs the Edge AI pipeline.
 
+### Step 0: Clone the Repository
+Clone the project repository to both your Laptop (Windows) and Raspberry Pi 4 (Edge Node):
+```bash
+git clone https://github.com/khoitiennguyen0511/traffic_monitoring_vn.git
+cd traffic_monitoring_vn
+```
+
 ### 1. Central Server Setup (Laptop - Windows)
 
 #### Step 1.1: Environment Setup
-Open PowerShell inside the root `traffic_monitoring_vn` directory:
+Open PowerShell in the cloned `traffic_monitoring_vn` directory:
 1. Create a Python virtual environment:
    ```powershell
    python -m venv .venv
@@ -229,10 +206,3 @@ With the virtual environment activated, run the main agent:
     ```bash
     python3 edge_pi4/agent_ncnn.py --headless
     ```
-
----
-
-## 🎓 Graduation Thesis Evaluations & Benchmarking (Chương 5)
-
-If you are running evaluations for your thesis report (e.g. testing model accuracy, latency, logging hardware stress tests, plotting telemetry charts), refer to the thesis appendix document:
-👉 [phu_luc_huong_dan_van_hanh.md](file:///d:/traffic_monitoring_vn/results/Viet_bao_cao/phu_luc_huong_dan_van_hanh.md)
