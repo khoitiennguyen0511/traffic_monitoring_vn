@@ -4,9 +4,10 @@ import cv2
 from pathlib import Path
 
 class VehicleDetector:
-    def __init__(self, model_path: str, target_size: int = 320):
+    def __init__(self, model_path: str, target_size: int = 320, num_threads: int = 4):
         self.model_path = model_path
         self.target_size = target_size
+        self.num_threads = num_threads
         
         # Tự động phát hiện nếu là mô hình NCNN
         is_ncnn = False
@@ -57,7 +58,7 @@ class VehicleDetector:
             for k, v in self.class_names_dict.items():
                 if v == class_name:
                     self.selected_class_ids.append(k)
-
+ 
     def load(self):
         if self.is_ncnn:
             if self.net is not None:
@@ -72,7 +73,7 @@ class VehicleDetector:
             self.net.opt.use_vulkan_compute = False      # Tắt Vulkan
             self.net.opt.use_bf16_storage = False        # Tắt BF16 storage để tránh NCNN C++ xuất tensor dạng 16-bit
             self.net.opt.use_packing_layout = False      # Tắt packing layout vì Python-NCNN không xuất đúng dạng packed sang NumPy
-            self.net.opt.num_threads = 4                 # Tận dụng tối đa 4 nhân của Pi 4
+            self.net.opt.num_threads = self.num_threads   # Tận dụng số luồng mong muốn
             self.net.opt.use_fp16_arithmetic = False     # Tắt FP16 arithmetic để ép buộc tính toán FP32 tiêu chuẩn, tránh lệch byte khi sang NumPy
             
             self.net.load_param(self.param_path)

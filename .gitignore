@@ -44,3 +44,5 @@ plates/
 # Thesis documents folder
 results/Viet_bao_cao/
 
+# Violations images
+server/data/violations/

@@ -315,6 +315,7 @@ def main() -> None:
 
     model_path   = str(BASE_DIR / edge_cfg.get("model_path", "shared/models/vehicle_best_ncnn_model"))
     target_size  = int(edge_cfg.get("target_size", 320))
+    num_threads  = int(edge_cfg.get("num_threads", 4))
     conf_thresh  = float(edge_cfg.get("confidence_threshold", 0.25))
     skip_factor   = int(edge_cfg.get("skip_factor", 2))
     cooldown_sec  = float(edge_cfg.get("violation_cooldown_sec", 5.0))
@@ -355,7 +356,7 @@ def main() -> None:
 
     # ── 2. Khởi tạo mô hình ──────────────────────────────────────────────────
     logger.info("[Init] Đang tải mô hình NCNN...")
-    detector = VehicleDetector(model_path, target_size=target_size)
+    detector = VehicleDetector(model_path, target_size=target_size, num_threads=num_threads)
     detector.load()  # Eager load → loại bỏ latency spike ở frame đầu tiên
     logger.info("[Init] Mô hình NCNN đã tải xong.")
 
