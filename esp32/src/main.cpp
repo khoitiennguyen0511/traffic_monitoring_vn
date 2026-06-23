@@ -96,20 +96,23 @@ void loop() {
         lastPublishedState = currentState;
     }
     
-    // checkSleepMode(); // Tạm thời tắt để chẩn đoán nhiễu nút bấm
+    checkSleepMode(); 
     
-    /* Tạm thời vô hiệu hóa chế độ ngủ để kiểm tra đèn
+    static bool wasSleeping = false;
     if (sleepMode) {
-        enterSleepMode();
+        if (!wasSleeping) {
+            enterSleepMode();
+            wasSleeping = true;
+        }
         if (millis() - lastMqttPub > 2000) { 
             publishTrafficStatusToFirebase();
             lastMqttPub = millis();
         }
         return;
     }
-    */
+    wasSleeping = false;
     
-    // checkButtons(); // Tạm thời tắt để chẩn đoán nhiễu nút bấm
+    checkButtons(); 
     
     if (currentMode == MODE_AUTO) {
         autoMode();

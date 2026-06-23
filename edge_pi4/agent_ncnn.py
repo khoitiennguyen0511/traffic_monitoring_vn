@@ -271,22 +271,18 @@ def main() -> None:
 
     signal.signal(signal.SIGINT, _sigint_handler)
 
-    # ── 1. Load cấu hình ─────────────────────────────────────────────────────
-    settings_path = BASE_DIR / "shared/configs/settings.yaml"
-    cfg      = _load_settings(settings_path)
-    edge_cfg = cfg.get("edge", {})
-    mqtt_cfg = cfg.get("mqtt", {})
-    srv_cfg  = cfg.get("server", {})
-
     # ── Parse Command Line Arguments ─────────────────────────────────────────
     import argparse
     parser = argparse.ArgumentParser(description="Edge Agent — NCNN Optimized")
     parser.add_argument("--source", type=str, default=None, help="Camera source (e.g. 0, 1, video, rtsp://...)")
     parser.add_argument("--headless", action="store_true", help="Run in headless mode without opening GUI windows")
+    parser.add_argument("--config", type=str, default="shared/configs/settings.yaml", help="Path to config file (relative to root)")
+    parser.add_argument("--model", type=str, default=None, help="Path to NCNN model folder (overrides config)")
+    parser.add_argument("--size", type=int, default=None, help="Input size for model inference (overrides config)")
     args = parser.parse_args()
 
     # ── 1. Load cấu hình ─────────────────────────────────────────────────────
-    settings_path = BASE_DIR / "shared/configs/settings.yaml"
+    settings_path = BASE_DIR / args.config
     cfg      = _load_settings(settings_path)
     edge_cfg = cfg.get("edge", {})
     mqtt_cfg = cfg.get("mqtt", {})
@@ -296,25 +292,36 @@ def main() -> None:
     H = int(edge_cfg.get("display_height", 720))
 
     # Xử lý nguồn camera từ tham số dòng lệnh hoặc config
+    sim_video = edge_cfg.get("simulation_video", "vehicle_counting.mp4")
     if args.source is not None:
         if args.source.isdigit():
             cam_src = int(args.source)
         elif args.source.lower() == "video":
-            cam_src = str(BASE_DIR / "vehicle_counting.mp4")
+            cam_src = str(BASE_DIR / sim_video)
         else:
             cam_src = args.source
     else:
         simulation_mode = bool(edge_cfg.get("simulation_mode", True))
         cam_src = edge_cfg.get("camera_source", 0)
         if simulation_mode and cam_src == 0:
-            cam_src = str(BASE_DIR / "vehicle_counting.mp4")
+            cam_src = str(BASE_DIR / sim_video)
         elif isinstance(cam_src, str) and cam_src.isdigit():
             cam_src = int(cam_src)
 
     headless = args.headless or not bool(edge_cfg.get("display_gui", True))
 
-    model_path   = str(BASE_DIR / edge_cfg.get("model_path", "shared/models/vehicle_best_ncnn_model"))
-    target_size  = int(edge_cfg.get("target_size", 320))
+    # Resolve model_path
+    if args.model is not None:
+        model_path = str(BASE_DIR / args.model)
+    else:
+        model_path = str(BASE_DIR / edge_cfg.get("model_path", "shared/models/vehicle_best_ncnn_model"))
+
+    # Resolve target_size
+    if args.size is not None:
+        target_size = args.size
+    else:
+        target_size = int(edge_cfg.get("target_size", 320))
+
     num_threads  = int(edge_cfg.get("num_threads", 4))
     conf_thresh  = float(edge_cfg.get("confidence_threshold", 0.25))
     skip_factor   = int(edge_cfg.get("skip_factor", 2))

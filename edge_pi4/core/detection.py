@@ -225,7 +225,7 @@ class VehicleDetector:
                 return sv.Detections.empty()
         else:
             # Chạy qua PyTorch (YOLO gốc)
-            results = self.model(frame, verbose=False)[0]
+            results = self.model(frame, imgsz=self.target_size, verbose=False)[0]
             detections = sv.Detections.from_ultralytics(results)
             detections = detections[np.isin(detections.class_id, self.selected_class_ids)]
             return detections

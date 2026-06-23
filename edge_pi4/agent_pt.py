@@ -231,10 +231,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Edge Agent — PyTorch Baseline")
     parser.add_argument("--source", type=str, default=None, help="Camera source (e.g. 0, 1, video, rtsp://...)")
     parser.add_argument("--headless", action="store_true", help="Run in headless mode without opening GUI windows")
+    parser.add_argument("--config", type=str, default="shared/configs/settings.yaml", help="Path to config file (relative to root)")
+    parser.add_argument("--model", type=str, default=None, help="Path to PyTorch model file (overrides default)")
+    parser.add_argument("--size", type=int, default=None, help="Input size for model inference (overrides config)")
     args = parser.parse_args()
 
     # ── 1. Load cấu hình ─────────────────────────────────────────────────────
-    settings_path = BASE_DIR / "shared/configs/settings.yaml"
+    settings_path = BASE_DIR / args.config
     cfg      = _load_settings(settings_path)
     edge_cfg = cfg.get("edge", {})
     mqtt_cfg = cfg.get("mqtt", {})
@@ -244,25 +247,35 @@ def main() -> None:
     H = int(edge_cfg.get("display_height", 720))
 
     # Xử lý nguồn camera từ tham số dòng lệnh hoặc config
+    sim_video = edge_cfg.get("simulation_video", "vehicle_counting.mp4")
     if args.source is not None:
         if args.source.isdigit():
             cam_src = int(args.source)
         elif args.source.lower() == "video":
-            cam_src = str(BASE_DIR / "vehicle_counting.mp4")
+            cam_src = str(BASE_DIR / sim_video)
         else:
             cam_src = args.source
     else:
         simulation_mode = bool(edge_cfg.get("simulation_mode", True))
         cam_src = edge_cfg.get("camera_source", 0)
         if simulation_mode and cam_src == 0:
-            cam_src = str(BASE_DIR / "vehicle_counting.mp4")
+            cam_src = str(BASE_DIR / sim_video)
         elif isinstance(cam_src, str) and cam_src.isdigit():
             cam_src = int(cam_src)
 
     headless = args.headless or not bool(edge_cfg.get("display_gui", True))
 
-    # PyTorch model: ép dùng .pt dù settings.yaml chỉ định NCNN
-    model_path = str(BASE_DIR / "shared/models/vehicle_best.pt")
+    # Resolve model_path for PyTorch
+    if args.model is not None:
+        model_path = str(BASE_DIR / args.model)
+    else:
+        model_path = str(BASE_DIR / "shared/models/vehicle_best.pt")
+
+    # Resolve target_size
+    if args.size is not None:
+        target_size = args.size
+    else:
+        target_size = int(edge_cfg.get("target_size", 320))
 
     conf_thresh  = float(edge_cfg.get("confidence_threshold", 0.25))
     skip_factor   = int(edge_cfg.get("skip_factor", 2))
@@ -293,13 +306,14 @@ def main() -> None:
     logger.info("  Edge Agent — PyTorch (Baseline Reference)")
     logger.info("  Source  : %s", cam_src)
     logger.info("  Model   : %s", model_path)
+    logger.info("  Size    : %s", target_size)
     logger.info("  Server  : %s", backend_url)
     logger.info("  Display : %dx%d | skip=%d", W, H, skip_factor)
     logger.info("═" * 60)
 
     # ── 2. Khởi tạo mô hình PyTorch ──────────────────────────────────────────
     logger.info("[Init] Đang tải mô hình PyTorch (Ultralytics)...")
-    detector = VehicleDetector(model_path)   # is_ncnn=False tự động
+    detector = VehicleDetector(model_path, target_size=target_size)   # is_ncnn=False tự động
     # Không cần gọi load() vì ultralytics tải trong __init__
     logger.info("[Init] Mô hình PyTorch đã tải xong.")
 

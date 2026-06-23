@@ -4,64 +4,90 @@
 
 void checkSleepMode() {
     static bool lastSW2State = HIGH;
-    bool currentSW2State = digitalRead(SW2);
+    static bool buttonState = HIGH;
+    static unsigned long lastDebounceTime = 0;
     
-    // Chỉ kích hoạt khi có sự chuyển đổi trạng thái từ HIGH sang LOW (nhấn xuống)
-    if (currentSW2State == LOW && lastSW2State == HIGH) {
-        delay(debounceDelay); // Chống dội phím
-        if (digitalRead(SW2) == LOW) {
-            sleepMode = !sleepMode;
-            Serial.println(sleepMode ? "Vào chế độ ngủ" : "Thoát chế độ ngủ");
-            
-            if (!sleepMode) {
-                lastChangeTime = millis();
-                updateTimeLeft();
-                updateLEDs();
+    bool reading = digitalRead(SW2);
+    unsigned long now = millis();
+    
+    if (reading != lastSW2State) {
+        lastDebounceTime = now;
+    }
+    
+    if ((now - lastDebounceTime) > debounceDelay) {
+        if (reading != buttonState) {
+            buttonState = reading;
+            if (buttonState == LOW) {
+                sleepMode = !sleepMode;
+                Serial.println(sleepMode ? "Vào chế độ ngủ" : "Thoát chế độ ngủ");
+                
+                if (!sleepMode) {
+                    lastChangeTime = now;
+                    updateTimeLeft();
+                    updateLEDs();
+                }
             }
         }
     }
-    lastSW2State = currentSW2State;
+    lastSW2State = reading;
 }
 
 void checkButtons() {
     static bool lastSW0State = HIGH;
     static bool lastSW1State = HIGH;
+    static bool buttonSW0State = HIGH;
+    static bool buttonSW1State = HIGH;
+    static unsigned long lastSW0DebounceTime = 0;
+    static unsigned long lastSW1DebounceTime = 0;
     
-    bool currentSW0State = digitalRead(SW0);
-    bool currentSW1State = digitalRead(SW1);
+    bool readingSW0 = digitalRead(SW0);
+    bool readingSW1 = digitalRead(SW1);
+    unsigned long now = millis();
     
     // SW0: Auto/Manual Mode Switch
-    if (currentSW0State == LOW && lastSW0State == HIGH) {
-        delay(debounceDelay);
-        if (digitalRead(SW0) == LOW) {
-            currentMode = (currentMode == MODE_AUTO) ? MODE_MANUAL : MODE_AUTO;
-            Serial.println(currentMode == MODE_AUTO ? "Chế độ TỰ ĐỘNG" : "Chế độ THỦ CÔNG");
-            
-            lastChangeTime = millis();
-            updateTimeLeft();
+    if (readingSW0 != lastSW0State) {
+        lastSW0DebounceTime = now;
+    }
+    if ((now - lastSW0DebounceTime) > debounceDelay) {
+        if (readingSW0 != buttonSW0State) {
+            buttonSW0State = readingSW0;
+            if (buttonSW0State == LOW) {
+                currentMode = (currentMode == MODE_AUTO) ? MODE_MANUAL : MODE_AUTO;
+                Serial.println(currentMode == MODE_AUTO ? "Chế độ TỰ ĐỘNG" : "Chế độ THỦ CÔNG");
+                lastChangeTime = now;
+                updateTimeLeft();
+            }
         }
     }
+    lastSW0State = readingSW0;
     
     // SW1: Manual state switch (Only in MANUAL mode)
-    if (currentMode == MODE_MANUAL && currentSW1State == LOW && lastSW1State == HIGH) {
-        delay(debounceDelay);
-        if (digitalRead(SW1) == LOW) {
-            switch(currentState) {
-                case STATE_1_GREEN:   currentState = STATE_1_YELLOW; break;
-                case STATE_1_YELLOW:  currentState = STATE_2_GREEN;  break;
-                case STATE_2_GREEN:   currentState = STATE_2_YELLOW; break;
-                case STATE_2_YELLOW:  currentState = STATE_1_GREEN;  break;
-            }
-            updateLEDs();
-            lastChangeTime = millis();
-            updateTimeLeft();
-            
-            Serial.println("Chuyển trạng thái thủ công");
+    if (currentMode == MODE_MANUAL) {
+        if (readingSW1 != lastSW1State) {
+            lastSW1DebounceTime = now;
         }
+        if ((now - lastSW1DebounceTime) > debounceDelay) {
+            if (readingSW1 != buttonSW1State) {
+                buttonSW1State = readingSW1;
+                if (buttonSW1State == LOW) {
+                    switch(currentState) {
+                        case STATE_1_GREEN:   currentState = STATE_1_YELLOW; break;
+                        case STATE_1_YELLOW:  currentState = STATE_2_GREEN;  break;
+                        case STATE_2_GREEN:   currentState = STATE_2_YELLOW; break;
+                        case STATE_2_YELLOW:  currentState = STATE_1_GREEN;  break;
+                    }
+                    updateLEDs();
+                    lastChangeTime = now;
+                    updateTimeLeft();
+                    
+                    Serial.println("Chuyển trạng thái thủ công");
+                }
+            }
+        }
+        lastSW1State = readingSW1;
+    } else {
+        lastSW1State = readingSW1;
     }
-    
-    lastSW0State = currentSW0State;
-    lastSW1State = currentSW1State;
 }
 
 void autoMode() {

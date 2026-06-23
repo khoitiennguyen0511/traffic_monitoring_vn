@@ -55,6 +55,9 @@ void callback(char* topic, byte* payload, unsigned int length) {
         if (message == "AUTO") {
             currentMode = MODE_AUTO;
             Serial.println("Remote: Chuyen sang AUTO");
+            lastChangeTime = millis();
+            updateTimeLeft();
+            updateLEDs();
         } else if (message == "MANUAL") {
             currentMode = MODE_MANUAL;
             Serial.println("Remote: Chuyen sang MANUAL");
