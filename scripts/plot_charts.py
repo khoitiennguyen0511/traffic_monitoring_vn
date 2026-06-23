@@ -29,19 +29,21 @@ os.makedirs('results/plots', exist_ok=True)
 # HELPER: LOAD BENCHMARK DATA DYNAMICALLY (6 VERSIONS)
 # ----------------------------------------------------
 def load_model_comparison_data():
-    # 6 versions of models
+    # 8 versions of models
     models = [
         'PyTorch 320', 
         'NCNN 320 (Non-opt)', 
         'NCNN FP16 320\n(Optimal)', 
+        'PyTorch 320\n(Toy)',
+        'NCNN FP16 320\n(Toy)',
         'PyTorch 480', 
         'NCNN 480 (Non-opt)', 
         'NCNN FP16 480'
     ]
     # Fallback values in case the JSON is missing or incomplete
-    fps_values = [5.9, 7.8, 10.6, 3.3, 3.6, 4.2]
-    avg_latency = [170.2, 128.5, 94.0, 299.3, 277.8, 235.8]
-    p95_latency = [175.7, 135.0, 100.2, 308.0, 310.0, 358.5]
+    fps_values = [5.9, 7.8, 10.6, 5.9, 10.6, 3.3, 3.6, 4.2]
+    avg_latency = [170.2, 128.5, 94.0, 170.2, 94.0, 299.3, 277.8, 235.8]
+    p95_latency = [175.7, 135.0, 100.2, 175.7, 100.2, 308.0, 310.0, 358.5]
     
     json_path = 'results/model_comparison_results.json'
     if os.path.exists(json_path):
@@ -54,6 +56,8 @@ def load_model_comparison_data():
                 "PyTorch 320x320 (vehicle_custom_best_320.pt)": "PyTorch 320",
                 "NCNN Original 320x320 (Non-opt)": "NCNN 320 (Non-opt)",
                 "NCNN FP16 320x320 (Optimized)": "NCNN FP16 320\n(Optimal)",
+                "PyTorch 320x320 Toy (vehicle_custom_best_320_(toy).pt)": "PyTorch 320\n(Toy)",
+                "NCNN FP16 320x320 Toy (Optimized)": "NCNN FP16 320\n(Toy)",
                 "PyTorch 480x480 (vehicle_custom_best.pt)": "PyTorch 480",
                 "NCNN Original 480x480 (Non-opt)": "NCNN 480 (Non-opt)",
                 "NCNN FP16 480x480 (Optimized)": "NCNN FP16 480"
@@ -87,7 +91,7 @@ def load_model_comparison_data():
 # ----------------------------------------------------
 def plot_fps_comparison():
     models, fps_values, _, _ = load_model_comparison_data()
-    colors = [PRIMARY_COLOR, MUTED_COLOR, HIGHLIGHT_COLOR, PRIMARY_COLOR, MUTED_COLOR, PRIMARY_COLOR]
+    colors = [PRIMARY_COLOR, MUTED_COLOR, HIGHLIGHT_COLOR, PRIMARY_COLOR, HIGHLIGHT_COLOR, PRIMARY_COLOR, MUTED_COLOR, PRIMARY_COLOR]
     
     fig, ax = plt.subplots(figsize=(9, 4.5))
     bars = ax.bar(models, fps_values, color=colors, edgecolor='grey', width=0.55)

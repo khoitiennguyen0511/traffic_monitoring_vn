@@ -158,6 +158,22 @@ def main():
         "is_ncnn": True
     })
 
+    # PyTorch 320 Toy
+    models_to_test.append({
+        "name": "PyTorch 320x320 Toy (vehicle_custom_best_320_(toy).pt)",
+        "path": str(models_dir / "vehicle_custom_best_320_(toy).pt"),
+        "size": 320,
+        "is_ncnn": False
+    })
+
+    # NCNN 320 Toy (Optimized)
+    models_to_test.append({
+        "name": "NCNN FP16 320x320 Toy (Optimized)",
+        "path": str(models_dir / "vehicle_custom_best_320_ncnn_model_(toy)"),
+        "size": 320,
+        "is_ncnn": True
+    })
+
     # PyTorch 480
     models_to_test.append({
         "name": "PyTorch 480x480 (vehicle_custom_best.pt)",

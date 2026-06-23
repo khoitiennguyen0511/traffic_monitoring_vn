@@ -46,3 +46,8 @@ results/Viet_bao_cao/
 
 # Violations images
 server/data/violations/
+
+# Local databases containing dynamic run logs
+server/data/traffic.db
+server/data/db.json
+

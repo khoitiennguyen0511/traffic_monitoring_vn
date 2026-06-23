@@ -234,6 +234,10 @@ With the virtual environment activated, run the agent:
     ```bash
     python3 edge_pi4/agent_pt.py
     ```
+*   **Toy Simulation Mode (Using the custom toy configuration):**
+    ```bash
+    python3 edge_pi4/agent_ncnn.py --config shared/configs/settings_toy.yaml
+    ```
 
 ---
 
@@ -241,15 +245,17 @@ With the virtual environment activated, run the agent:
 
 #### Step 5.1: Environment Verification
 Verify that your Python packages, libraries (OpenCV NEON/OpenMP build flags), hardware settings (CPU frequency governor), and model weights are ready:
-```bash
-python3 scripts/check_env_pi.py
-```
+  ```bash
+  python3 scripts/check_env_pi.py
+  # Or for the toy setup:
+  python3 scripts/check_env_pi.py --config shared/configs/settings_toy.yaml
+  ```
 
 #### Step 5.2: Model Performance Benchmarking
-Compare model load times, inference latencies, and theoretical FPS between PyTorch (`.pt`) and NCNN (Original vs Optimized) at 320x320 and 480x480 resolution:
-```bash
-python3 scripts/compare_models.py
-```
+Compare model load times, inference latencies, and theoretical FPS between PyTorch (`.pt`) and NCNN (Original vs Optimized) at 320x320 and 480x480 resolution (including Toy models):
+  ```bash
+  python3 scripts/compare_models.py
+  ```
 *The benchmark report will be written to `shared/configs/model_comparison_results.md`.*
 
 #### Step 5.3: Automated Validation & Telemetry Suite
@@ -261,10 +267,10 @@ bash scripts/run_automated_tests.sh
 #### Step 5.4: Model Optimization (FP16)
 If you want to optimize your own custom-trained YOLO model to FP16:
 ```bash
-cd ~/ncnn/build/tools
-./ncnnoptimize \
-  ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model.ncnn.param \
-  ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model.ncnn.bin \
-  ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-opt.param \
-  ~/traffic_monitoring_vn/shared/models/vehicle_best_ncnn_model/model-opt.bin 0
+cd ~/traffic_monitoring_vn/shared/models/vehicle_custom_best_320_ncnn_model
+~/yoloncnn/thirdparty/ncnn_build/install/bin/ncnnoptimize model.ncnn.param model.ncnn.bin model-opt.param model-opt.bin 1
+mv model.ncnn.param model.ncnn.param.bak
+mv model.ncnn.bin model.ncnn.bin.bak
+cp model-opt.param model.ncnn.param
+cp model-opt.bin model.ncnn.bin
 ```

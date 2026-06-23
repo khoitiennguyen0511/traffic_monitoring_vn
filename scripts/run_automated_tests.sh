@@ -228,7 +228,7 @@ $(cat "$EXPORT_DIR/model_comparison_results.md")
 
 ---
 
-*Lưu ý: Dữ liệu vi phạm chi tiết được lưu trữ trực tiếp trên Máy chủ trung tâm (Windows PC) tại `server/data/traffic.db` và có thể theo dõi qua Streamlit Dashboard.*
+*Lưu ý: Dữ liệu vi phạm chi tiết được lưu trữ trực tiếp trên Máy chủ trung tâm (Windows PC) tại \`server/data/traffic.db\` và có thể theo dõi qua Streamlit Dashboard.*
 EOF
 
 echo -e "\n${BOLD}${GREEN}================================================================${NC}"

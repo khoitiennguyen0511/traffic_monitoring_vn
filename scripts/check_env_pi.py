@@ -11,6 +11,13 @@ import socket
 import subprocess
 from pathlib import Path
 
+# Đảm bảo mã hóa UTF-8 trên Windows để không lỗi print kí tự tiếng Việt
+if sys.stdout.encoding != 'utf-8':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass
+
 # Định nghĩa mã màu ANSI cho console log sinh động
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
@@ -18,6 +25,7 @@ RED = "\033[91m"
 BLUE = "\033[94m"
 RESET = "\033[0m"
 BOLD = "\033[1m"
+CONFIG_FILE = "shared/configs/settings.yaml"
 
 def print_section(title: str):
     print(f"\n{BOLD}{BLUE}=== {title} ==={RESET}")
@@ -108,7 +116,7 @@ def check_cpp_ncnn_sdk():
 def check_model_files():
     print_section("5. KIỂM TRA TỆP MÔ HÌNH NCNN")
     base_dir = Path(__file__).parent.parent
-    settings_path = base_dir / "shared/configs/settings.yaml"
+    settings_path = base_dir / CONFIG_FILE
     model_path_str = "shared/models/vehicle_best_ncnn_model"
     
     if settings_path.exists():
@@ -148,9 +156,9 @@ def check_model_files():
 def check_network_connections():
     print_section("6. KIỂM TRA KẾT NỐI MẠNG (PING / SOCKET)")
     
-    # Đọc cấu hình settings.yaml để lấy IP
+    # Đọc cấu hình để lấy IP
     base_dir = Path(__file__).parent.parent
-    settings_path = base_dir / "shared/configs/settings.yaml"
+    settings_path = base_dir / CONFIG_FILE
     server_host = "172.20.10.2"
     server_port = 8000
     mqtt_host = "172.20.10.5"
@@ -235,6 +243,14 @@ def check_hardware_status():
         print("  - CPU Governor: Không được hỗ trợ trên OS này")
 
 def main():
+    global CONFIG_FILE
+    import argparse
+    parser = argparse.ArgumentParser(description="Raspberry Pi 4 Environment Checker")
+    parser.add_argument("--config", type=str, default="shared/configs/settings.yaml", help="Path to config file (relative to root)")
+    args = parser.parse_args()
+    
+    CONFIG_FILE = args.config
+    
     print(f"\n{BOLD}{GREEN}===================================================={RESET}")
     print(f"{BOLD}{GREEN}     HỆ THỐNG KIỂM TRA MÔI TRƯỜNG EDGE AI PI 4{RESET}")
     print(f"{BOLD}{GREEN}===================================================={RESET}")

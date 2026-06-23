@@ -7,9 +7,11 @@ def test_inference():
     in0 = torch.rand(1, 3, 320, 320, dtype=torch.float)
     out = []
 
+    import os
+    current_dir = os.path.dirname(os.path.abspath(__file__))
     with ncnn.Net() as net:
-        net.load_param("/content/vehicle_custom_best_320_ncnn_model/model.ncnn.param")
-        net.load_model("/content/vehicle_custom_best_320_ncnn_model/model.ncnn.bin")
+        net.load_param(os.path.join(current_dir, "model.ncnn.param"))
+        net.load_model(os.path.join(current_dir, "model.ncnn.bin"))
 
         with net.create_extractor() as ex:
             ex.input("in0", ncnn.Mat(in0.squeeze(0).numpy()).clone())

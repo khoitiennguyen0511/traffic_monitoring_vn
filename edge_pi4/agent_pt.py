@@ -30,6 +30,13 @@ import time
 from pathlib import Path
 
 import cv2
+
+# Đảm bảo mã hóa UTF-8 trên Windows để không lỗi print kí tự tiếng Việt
+if sys.stdout.encoding != 'utf-8':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass
 import numpy as np
 import supervision as sv
 import yaml

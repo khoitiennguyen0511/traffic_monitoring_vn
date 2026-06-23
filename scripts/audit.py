@@ -18,12 +18,20 @@ from pathlib import Path
 import numpy as np
 import cv2
 
+# Đảm bảo mã hóa UTF-8 trên Windows để không lỗi print kí tự tiếng Việt
+if sys.stdout.encoding != 'utf-8':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass
+
 # Set project root path
 BASE_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(BASE_DIR))
 sys.path.insert(0, str(BASE_DIR / "edge_pi4"))
 
 # Colors
+CONFIG_FILE = "shared/configs/settings.yaml"
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
 RED = "\033[91m"
@@ -238,7 +246,7 @@ def run_camera_audit(source_str):
 
 def get_model_path_from_settings():
     import yaml
-    settings_path = BASE_DIR / "shared/configs/settings.yaml"
+    settings_path = BASE_DIR / CONFIG_FILE
     default_model = "shared/models/vehicle_custom_best_320_ncnn_model"
     if settings_path.exists():
         try:
@@ -456,7 +464,7 @@ def run_pipeline_audit():
 
     # 8. MQTT Publish
     import yaml
-    settings_path = BASE_DIR / "shared/configs/settings.yaml"
+    settings_path = BASE_DIR / CONFIG_FILE
     broker = "127.0.0.1"
     port = 1883
     if settings_path.exists():
@@ -682,11 +690,15 @@ def run_system_profile(source_str, duration):
 # MAIN ENTRY POINT
 # =====================================================================
 def main():
+    global CONFIG_FILE
     parser = argparse.ArgumentParser(description="Raspberry Pi 4 Edge AI Production Auditor")
     parser.add_argument("--source", type=str, default="0", help="Camera source index (int) or RTSP url (str) or video file path")
+    parser.add_argument("--config", type=str, default="shared/configs/settings.yaml", help="Path to config file (relative to root)")
     parser.add_argument("--duration", type=int, default=300, help="System profile duration in seconds (default 300s / 5 mins)")
     parser.add_argument("--skip-profile", action="store_true", help="Skip the 5-minute system profiling phase")
     args = parser.parse_args()
+    
+    CONFIG_FILE = args.config
     
     print_banner("Edge AI System Audit Started")
     print(f"  Target Source: {args.source}")
