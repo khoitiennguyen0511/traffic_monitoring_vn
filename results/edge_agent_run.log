@@ -1,0 +1,104 @@
+17:08:03 [agent_ncnn  ] INFO     ════════════════════════════════════════════════════════════
+17:08:03 [agent_ncnn  ] INFO       Edge Agent — NCNN Optimized
+17:08:03 [agent_ncnn  ] INFO       Source  : /home/pi/traffic_monitoring_vn/vehicle_counting.mp4
+17:08:03 [agent_ncnn  ] INFO       Model   : /home/pi/traffic_monitoring_vn/shared/models/vehicle_custom_best_320_ncnn_model  (size=320)
+17:08:03 [agent_ncnn  ] INFO       Server  : http://172.20.10.2:8000
+17:08:03 [agent_ncnn  ] INFO       MQTT    : 172.20.10.5:1883
+17:08:03 [agent_ncnn  ] INFO       Display : 1280x720 | skip=2 | cooldown=5.0s
+17:08:03 [agent_ncnn  ] INFO     ════════════════════════════════════════════════════════════
+17:08:03 [agent_ncnn  ] INFO     [Init] Đang tải mô hình NCNN...
+[NCNN] Đang tải mô hình NCNN từ: /home/pi/traffic_monitoring_vn/shared/models/vehicle_custom_best_320_ncnn_model/model-opt.param
+[NCNN] Và: /home/pi/traffic_monitoring_vn/shared/models/vehicle_custom_best_320_ncnn_model/model-opt.bin
+[NCNN] Đã tải mô hình NCNN lên CPU thành công!
+17:08:03 [agent_ncnn  ] INFO     [Init] Mô hình NCNN đã tải xong.
+17:08:03 [network.mqtt_manager] INFO     [MQTT] Đang kết nối tới 172.20.10.5:1883 ...
+17:08:03 [agent_ncnn  ] INFO     [Init] Chờ frame đầu tiên từ camera...
+17:08:03 [network.mqtt_manager] INFO     [MQTT] Kết nối thành công → 172.20.10.5:1883
+17:08:03 [core.pipeline] INFO     [Capture] Đã mở nguồn: /home/pi/traffic_monitoring_vn/vehicle_counting.mp4
+17:08:03 [core.pipeline] INFO     [Capture] Video FPS=30.0 → pacing interval=33.3ms
+17:08:03 [agent_ncnn  ] INFO     [Init] Camera sẵn sàng. Bắt đầu vòng lặp inference.
+17:08:03 [agent_ncnn  ] INFO     ═══ NCNN PIPELINE ĐANG CHẠY — nhấn Q để thoát ═══
+17:08:03 [core.tracking] WARNING  [ViolationDetector] Xe #13 đè vạch cấm! (cooldown=5.0s)
+17:08:03 [core.tracking] WARNING  [ViolationDetector] Xe #22 đè vạch cấm! (cooldown=5.0s)
+17:08:03 [agent_ncnn  ] WARNING    ⚠  Xe #13 đè vạch cấm vượt đèn đỏ!
+17:08:03 [agent_ncnn  ] WARNING    ⚠  Xe #22 đè vạch cấm vượt đèn đỏ!
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '51A01204', 'confidence': 0.8837252259254456, 'message': None}
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '30E85886', 'confidence': 0.9460290670394897, 'message': None}
+17:08:05 [core.tracking] WARNING  [ViolationDetector] Xe #119 đè vạch cấm! (cooldown=5.0s)
+17:08:05 [agent_ncnn  ] WARNING    ⚠  Xe #119 đè vạch cấm vượt đèn đỏ!
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '65H90714', 'confidence': 0.945946991443634, 'message': None}
+17:08:06 [core.tracking] WARNING  [ViolationDetector] Xe #155 đè vạch cấm! (cooldown=5.0s)
+17:08:06 [agent_ncnn  ] WARNING    ⚠  Xe #155 đè vạch cấm vượt đèn đỏ!
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '37N107918', 'confidence': 0.9197100400924683, 'message': None}
+17:08:08 [core.tracking] WARNING  [ViolationDetector] Xe #266 đè vạch cấm! (cooldown=5.0s)
+17:08:08 [agent_ncnn  ] WARNING    ⚠  Xe #266 đè vạch cấm vượt đèn đỏ!
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '60B356563', 'confidence': 0.9142451882362366, 'message': None}
+17:08:08 [core.tracking] WARNING  [ViolationDetector] Xe #263 đè vạch cấm! (cooldown=5.0s)
+17:08:08 [agent_ncnn  ] WARNING    ⚠  Xe #263 đè vạch cấm vượt đèn đỏ!
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '62A34248', 'confidence': 0.9281970858573914, 'message': None}
+17:08:09 [core.tracking] WARNING  [ViolationDetector] Xe #316 đè vạch cấm! (cooldown=5.0s)
+17:08:09 [agent_ncnn  ] WARNING    ⚠  Xe #316 đè vạch cấm vượt đèn đỏ!
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+17:08:09 [core.tracking] WARNING  [ViolationDetector] Xe #327 đè vạch cấm! (cooldown=5.0s)
+17:08:09 [agent_ncnn  ] WARNING    ⚠  Xe #327 đè vạch cấm vượt đèn đỏ!
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '59B149876', 'confidence': 0.8402978181838989, 'message': None}
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '51A89714', 'confidence': 0.9028564095497131, 'message': None}
+17:08:10 [core.tracking] WARNING  [ViolationDetector] Xe #369 đè vạch cấm! (cooldown=5.0s)
+17:08:10 [agent_ncnn  ] WARNING    ⚠  Xe #369 đè vạch cấm vượt đèn đỏ!
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '59F224643', 'confidence': 0.683231770992279, 'message': None}
+17:08:14 [core.tracking] WARNING  [ViolationDetector] Xe #577 đè vạch cấm! (cooldown=5.0s)
+17:08:14 [agent_ncnn  ] WARNING    ⚠  Xe #577 đè vạch cấm vượt đèn đỏ!
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '51G42388', 'confidence': 0.45110854506492615, 'message': None}
+17:08:19 [agent_ncnn  ] INFO     [MQTT] Trạng thái đèn: 2_YELLOW     → lane2_red=False
+17:08:22 [agent_ncnn  ] INFO     [MQTT] Trạng thái đèn: 1_GREEN      → lane2_red=True
+17:08:24 [core.tracking] WARNING  [ViolationDetector] Xe #1076 đè vạch cấm! (cooldown=5.0s)
+17:08:24 [agent_ncnn  ] WARNING    ⚠  Xe #1076 đè vạch cấm vượt đèn đỏ!
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '75K30899', 'confidence': 0.9472994208335876, 'message': None}
+17:08:25 [core.tracking] WARNING  [ViolationDetector] Xe #1143 đè vạch cấm! (cooldown=5.0s)
+17:08:25 [agent_ncnn  ] WARNING    ⚠  Xe #1143 đè vạch cấm vượt đèn đỏ!
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '59E153127', 'confidence': 0.9394241571426392, 'message': None}
+17:08:27 [core.tracking] WARNING  [ViolationDetector] Xe #1331 đè vạch cấm! (cooldown=5.0s)
+17:08:27 [agent_ncnn  ] WARNING    ⚠  Xe #1331 đè vạch cấm vượt đèn đỏ!
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+17:08:27 [core.tracking] WARNING  [ViolationDetector] Xe #1227 đè vạch cấm! (cooldown=5.0s)
+17:08:27 [agent_ncnn  ] WARNING    ⚠  Xe #1227 đè vạch cấm vượt đèn đỏ!
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '59X152894', 'confidence': 0.9522309303283691, 'message': None}
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '51G51008', 'confidence': 0.9096299409866333, 'message': None}
+17:08:28 [core.tracking] WARNING  [ViolationDetector] Xe #1397 đè vạch cấm! (cooldown=5.0s)
+17:08:28 [core.tracking] WARNING  [ViolationDetector] Xe #1395 đè vạch cấm! (cooldown=5.0s)
+17:08:28 [agent_ncnn  ] WARNING    ⚠  Xe #1397 đè vạch cấm vượt đèn đỏ!
+17:08:28 [agent_ncnn  ] WARNING    ⚠  Xe #1395 đè vạch cấm vượt đèn đỏ!
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '66C169632', 'confidence': 0.6967437267303467, 'message': None}
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '51G52911', 'confidence': 0.898565948009491, 'message': None}
+17:08:43 [core.tracking] WARNING  [ViolationDetector] Xe #2041 đè vạch cấm! (cooldown=5.0s)
+17:08:43 [agent_ncnn  ] WARNING    ⚠  Xe #2041 đè vạch cấm vượt đèn đỏ!
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '43A18650', 'confidence': 0.8806564211845398, 'message': None}
+17:08:44 [core.tracking] WARNING  [ViolationDetector] Xe #2065 đè vạch cấm! (cooldown=5.0s)
+17:08:44 [agent_ncnn  ] WARNING    ⚠  Xe #2065 đè vạch cấm vượt đèn đỏ!
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+17:08:44 [core.tracking] WARNING  [ViolationDetector] Xe #2075 đè vạch cấm! (cooldown=5.0s)
+17:08:44 [agent_ncnn  ] WARNING    ⚠  Xe #2075 đè vạch cấm vượt đèn đỏ!
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '51G47340', 'confidence': 0.7732963562011719, 'message': None}
+[EDGE HTTP] Bắt đầu đẩy ảnh vi phạm lên máy chủ...
+[EDGE HTTP] Thành công! Phản hồi máy chủ: {'status': 'success', 'plate_text': '72K125476', 'confidence': 0.9273403882980347, 'message': None}
+17:08:45 [agent_ncnn  ] INFO     [MQTT] Trạng thái đèn: 1_YELLOW     → lane2_red=True
+17:08:48 [agent_ncnn  ] INFO     [MQTT] Trạng thái đèn: 2_GREEN      → lane2_red=False
+17:08:58 [agent_ncnn  ] INFO     [Shutdown] Nhận SIGINT. Đang dừng pipeline...
+17:08:58 [agent_ncnn  ] INFO     [Shutdown] Dừng các threads...
+17:08:58 [core.pipeline] INFO     [Capture] Thread đã dừng.
+17:08:58 [agent_ncnn  ] INFO     ═══ NCNN PIPELINE ĐÃ DỪNG ═══

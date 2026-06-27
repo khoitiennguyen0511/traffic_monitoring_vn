@@ -1,0 +1,168 @@
+[ WARN:0@5.872] global cap_gstreamer.cpp:2839 handleMessage OpenCV | GStreamer warning: Embedded video playback halted; module v4l2src0 reported: Failed to allocate required memory.
+[ WARN:0@5.873] global cap_gstreamer.cpp:1698 open OpenCV | GStreamer warning: unable to start pipeline
+[ WARN:0@5.873] global cap_gstreamer.cpp:1173 isPipelinePlaying OpenCV | GStreamer warning: GStreamer: pipeline have not been created
+[ WARN:0@5.876] global cap_v4l.cpp:1938 getProperty VIDEOIO(V4L2:/dev/video0): Unable to get camera FPS
+DeprecationWarning: Callback API version 1 is deprecated, update to latest version
+[ WARN:0@50.631] global cap_gstreamer.cpp:2839 handleMessage OpenCV | GStreamer warning: Embedded video playback halted; module v4l2src1 reported: Failed to allocate required memory.
+[ WARN:0@50.632] global cap_gstreamer.cpp:1698 open OpenCV | GStreamer warning: unable to start pipeline
+[ WARN:0@50.632] global cap_gstreamer.cpp:1173 isPipelinePlaying OpenCV | GStreamer warning: GStreamer: pipeline have not been created
+
+[1m[92m================================================================[0m
+[1m[92m                  EDGE AI SYSTEM AUDIT STARTED                  [0m
+[1m[92m================================================================[0m
+  Target Source: 0
+  Profile Time : 300s
+
+[1m[92m================================================================[0m
+[1m[92m                   PHASE 1: ENVIRONMENT AUDIT                   [0m
+[1m[92m================================================================[0m
+
+[1m[94m--- Hardware & OS ---[0m
+  CPU Model       : Raspberry Pi 4 Model B Rev 1.5
+  CPU Governor    : ondemand
+  ARM Frequency   : 1800 MHz
+  SoC Temperature : 56.5°C
+  Storage Device  : MicroSD Card
+  Storage Bus Type: SD (MMC/SDIO)
+  Kernel Version  : 6.18.34+rpt-rpi-v8 (64bit / 64 bits)
+
+  Memory Telemetry:
+total        used        free      shared  buff/cache   available
+Mem:           3.7Gi       553Mi       1.6Gi        52Mi       1.7Gi       3.2Gi
+Swap:          2.0Gi          0B       2.0Gi
+
+[1m[94m--- OpenCV Optimizations ---[0m
+  OpenCV Version  : 4.10.0
+  ARM NEON        : YES
+  VFPV3           : NO
+  OpenMP          : NO
+  TBB             : YES
+  GStreamer       : YES
+  FFmpeg          : YES
+  OpenCL          : YES
+
+[1m[94m--- NCNN Build Settings ---[0m
+  NCNN Binding    : Loaded successfully [v1.0.20260526]
+  OpenMP Support  : YES (Default threads: 4)
+  FP16 Packed     : True
+  FP16 Arithmetic : True
+  BF16 Storage    : False
+  Vulkan Support  : False
+
+[1m[94m--- Python Package Versions ---[0m
+  numpy           : Installed [v2.4.6]
+  cv2             : Installed [v4.10.0]
+  ncnn            : Installed [v1.0.20260526]
+  ultralytics     : Installed [v8.4.72]
+  supervision     : Installed [v0.26.1]
+  paho.mqtt       : Installed [v2.1.0]
+
+[1m[92m================================================================[0m
+[1m[92m                     PHASE 2: CAMERA AUDIT                      [0m
+[1m[92m================================================================[0m
+  Target Source   : 0
+  Open Latency    : 119.38 ms
+  Resolution      : 640x480
+  Reported FPS    : -1.0
+  Actual Decode FPS: 0.00 FPS
+  Frame Read Latency stats:
+    Min           : 0.00 ms
+    Avg           : 0.00 ms
+    p95           : 0.00 ms
+    p99           : 0.00 ms
+    Max           : 0.00 ms
+
+[1m[92m================================================================[0m
+[1m[92m                      PHASE 3: MODEL AUDIT                      [0m
+[1m[92m================================================================[0m
+
+[1m[94m--- Model Inference Audit - Threads: 1 ---[0m
+[NCNN] Đang tải mô hình NCNN từ: /home/pi/traffic_monitoring_vn/shared/models/vehicle_custom_best_320_ncnn_model/model-opt.param
+[NCNN] Và: /home/pi/traffic_monitoring_vn/shared/models/vehicle_custom_best_320_ncnn_model/model-opt.bin
+[NCNN] Đã tải mô hình NCNN lên CPU thành công!
+  Load Time       : 80.95 ms
+  Avg Warmup Time : 191.10 ms/frame
+  Inference Latency:
+    Min           : 178.72 ms
+    Avg           : 185.73 ms
+    p95           : 216.04 ms
+    p99           : 220.22 ms
+    Max           : 220.48 ms
+
+[1m[94m--- Model Inference Audit - Threads: 2 ---[0m
+[NCNN] Đang tải mô hình NCNN từ: /home/pi/traffic_monitoring_vn/shared/models/vehicle_custom_best_320_ncnn_model/model-opt.param
+[NCNN] Và: /home/pi/traffic_monitoring_vn/shared/models/vehicle_custom_best_320_ncnn_model/model-opt.bin
+[NCNN] Đã tải mô hình NCNN lên CPU thành công!
+  Load Time       : 64.15 ms
+  Avg Warmup Time : 116.85 ms/frame
+  Inference Latency:
+    Min           : 112.67 ms
+    Avg           : 119.53 ms
+    p95           : 148.34 ms
+    p99           : 151.64 ms
+    Max           : 151.77 ms
+
+[1m[94m--- Model Inference Audit - Threads: 3 ---[0m
+[NCNN] Đang tải mô hình NCNN từ: /home/pi/traffic_monitoring_vn/shared/models/vehicle_custom_best_320_ncnn_model/model-opt.param
+[NCNN] Và: /home/pi/traffic_monitoring_vn/shared/models/vehicle_custom_best_320_ncnn_model/model-opt.bin
+[NCNN] Đã tải mô hình NCNN lên CPU thành công!
+  Load Time       : 63.36 ms
+  Avg Warmup Time : 127.79 ms/frame
+  Inference Latency:
+    Min           : 100.35 ms
+    Avg           : 101.52 ms
+    p95           : 106.22 ms
+    p99           : 106.80 ms
+    Max           : 106.84 ms
+
+[1m[94m--- Model Inference Audit - Threads: 4 ---[0m
+[NCNN] Đang tải mô hình NCNN từ: /home/pi/traffic_monitoring_vn/shared/models/vehicle_custom_best_320_ncnn_model/model-opt.param
+[NCNN] Và: /home/pi/traffic_monitoring_vn/shared/models/vehicle_custom_best_320_ncnn_model/model-opt.bin
+[NCNN] Đã tải mô hình NCNN lên CPU thành công!
+  Load Time       : 63.75 ms
+  Avg Warmup Time : 92.33 ms/frame
+  Inference Latency:
+    Min           : 89.86 ms
+    Avg           : 98.50 ms
+    p95           : 122.70 ms
+    p99           : 161.96 ms
+    Max           : 164.87 ms
+
+[1m[92m================================================================[0m
+[1m[92m                    PHASE 4: PIPELINE AUDIT                     [0m
+[1m[92m================================================================[0m
+  Resize (720p -> 320x320)                 : Min=2.41ms | Avg=2.45ms | p95=2.49ms | p99=2.54ms | Max=2.60ms
+  Preprocessing (Simulation)               : Min=4.23ms | Avg=4.32ms | p95=4.35ms | p99=5.23ms | Max=7.76ms
+[NCNN] Đang tải mô hình NCNN từ: /home/pi/traffic_monitoring_vn/shared/models/vehicle_custom_best_320_ncnn_model/model-opt.param
+[NCNN] Và: /home/pi/traffic_monitoring_vn/shared/models/vehicle_custom_best_320_ncnn_model/model-opt.bin
+[NCNN] Đã tải mô hình NCNN lên CPU thành công!
+  NCNN Inference (3 threads)               : Min=102.68ms | Avg=104.27ms | p95=109.63ms | p99=113.91ms | Max=117.77ms
+  NMS Boxes (OpenCV C++ core, 50 bboxes)   : Min=0.04ms | Avg=0.04ms | p95=0.05ms | p99=0.08ms | Max=0.12ms
+  ByteTrack Update                         : Min=2.00ms | Avg=2.69ms | p95=2.74ms | p99=2.92ms | Max=4.15ms
+  Flow Counting (Polygon Trigger)          : Min=0.22ms | Avg=0.23ms | p95=0.24ms | p99=0.33ms | Max=0.48ms
+  SQLite Write (Journal Mode DELETE)       : Min=5.73ms | Avg=10.29ms | p95=17.05ms | p99=28.42ms | Max=45.46ms
+  SQLite Write (WAL + synchronous=NORMAL)  : Min=0.05ms | Avg=0.06ms | p95=0.06ms | p99=0.08ms | Max=0.14ms
+  MQTT Publish Latency (172.20.10.5:1883)  : Min=0.11ms | Avg=0.23ms | p95=0.28ms | p99=2.03ms | Max=3.66ms
+  JPEG Encode (200x200 crop, quality=85)   : Min=0.84ms | Avg=1.02ms | p95=0.86ms | p99=1.07ms | Max=18.21ms
+
+[1m[92m================================================================[0m
+[1m[92m            PHASE 5: SYSTEM PROFILING (300 SECONDS)             [0m
+[1m[92m================================================================[0m
+[NCNN] Đang tải mô hình NCNN từ: /home/pi/traffic_monitoring_vn/shared/models/vehicle_custom_best_320_ncnn_model/model-opt.param
+[NCNN] Và: /home/pi/traffic_monitoring_vn/shared/models/vehicle_custom_best_320_ncnn_model/model-opt.bin
+[NCNN] Đã tải mô hình NCNN lên CPU thành công!
+  Profiling starting... CSV output target: /home/pi/traffic_monitoring_vn/scripts/system_profile.csv
+  Progress: [] Done!
+
+  Profiling Completed:
+    Total Frames Processed : 0
+    Avg End-to-End FPS     : 0.00 FPS
+    Avg Inference Latency  : 0.00 ms
+    Total Frame Drops      : 0
+    [91mNo profiling data collected. CSV not written.[0m
+
+[1m[92m================================================================[0m
+[1m[92m                   AUDIT EXECUTION COMPLETED                    [0m
+[1m[92m================================================================[0m
+  [92mPlease collect the generated report and scripts/system_profile.csv for further analysis.[0m
+

@@ -1,0 +1,48 @@
+
+[1m[92m====================================================[0m
+[1m[92m     HỆ THỐNG KIỂM TRA MÔI TRƯỜNG EDGE AI PI 4[0m
+[1m[92m====================================================[0m
+
+[1m[94m=== 1. KIỂM TRA PYTHON & VIRTUAL ENVIRONMENT ===[0m
+  Python Interpreter: /home/pi/traffic_monitoring_vn/.venv/bin/python3
+  Python Version: 3.13.5
+  [92m✓ Đang chạy trong môi trường ảo (.venv) thành công.[0m
+
+[1m[94m=== 2. KIỂM TRA CÁC THƯ VIỆN PYTHON CẦN THIẾT ===[0m
+  [92m✓ cv2             (OpenCV                        ): Đã cài đặt [v4.10.0][0m
+  [92m✓ ncnn            (Tencent NCNN Python Binding   ): Đã cài đặt [v1.0.20260526][0m
+  [92m✓ supervision     (Roboflow Supervision          ): Đã cài đặt [v0.26.1][0m
+  [92m✓ ultralytics     (Ultralytics YOLO Framework    ): Đã cài đặt [v8.4.72][0m
+  [92m✓ paho.mqtt       (MQTT Client Library           ): Đã cài đặt [v2.1.0][0m
+  [92m✓ requests        (HTTP Requests                 ): Đã cài đặt [v2.34.2][0m
+  [92m✓ yaml            (PyYAML Config Parser          ): Đã cài đặt [v6.0.3][0m
+
+[1m[94m=== 3. KIỂM TRA BẢN BUILD OPENCV (ARM OPTIMIZATIONS) ===[0m
+  [93m⚠ OpenCV có NEON trong build flag nhưng đang tắt (NO).[0m
+  [93m⚠ OpenCV chạy đơn luồng (không có OpenMP/TBB)! Có thể gây bottleneck khi render GUI.[0m
+
+[1m[94m=== 4. KIỂM TRA THƯ VIỆN NCNN C++ SDK (HỆ THỐNG) ===[0m
+  [93m⚠ File header NCNN (net.h)            KHÔNG tìm thấy tại /usr/local/include/ncnn/net.h. Điều này không ảnh hưởng nếu bạn chỉ chạy Python NCNN binding, nhưng sẽ gây lỗi nếu bạn biên dịch code C++.[0m
+  [93m⚠ File thư viện tĩnh NCNN (libncnn.a) KHÔNG tìm thấy tại /usr/local/lib/ncnn/libncnn.a. Điều này không ảnh hưởng nếu bạn chỉ chạy Python NCNN binding, nhưng sẽ gây lỗi nếu bạn biên dịch code C++.[0m
+
+[1m[94m=== 5. KIỂM TRA TỆP MÔ HÌNH NCNN ===[0m
+  Đường dẫn kiểm tra: shared/models/vehicle_custom_best_320_ncnn_model
+  [92m✓ model-opt.param     : Đang tồn tại [0.03 MB][0m
+  [92m✓ model-opt.bin       : Đang tồn tại [4.97 MB][0m
+  [92m✓ model.ncnn.param    : Đang tồn tại [0.03 MB][0m
+  [92m✓ model.ncnn.bin      : Đang tồn tại [4.97 MB][0m
+
+[1m[94m=== 6. KIỂM TRA KẾT NỐI MẠNG (PING / SOCKET) ===[0m
+  Đang kiểm tra kết nối tới FastAPI Server (172.20.10.2:8000)...
+  [92m✓ Kết nối tới FastAPI Server thành công![0m
+  Đang kiểm tra kết nối tới MQTT Broker (172.20.10.5:1883)...
+  [92m✓ Kết nối tới MQTT Broker thành công![0m
+
+[1m[94m=== 7. KIỂM TRA TRẠNG THÁI PHẦN CỨNG (RASPBERRY PI) ===[0m
+  [92m✓ Nhiệt độ CPU hiện tại: 47.2°C (Mát mẻ, an toàn)[0m
+  [93m⚠ CPU Governor mode: ondemand (Đang ở chế độ tiết kiệm điện. Khuyên dùng lệnh chuyển sang 'performance')[0m
+
+[1m[92m====================================================[0m
+[1m[92m                 HOÀN THÀNH QUÉT HỆ THỐNG[0m
+[1m[92m====================================================[0m
+
